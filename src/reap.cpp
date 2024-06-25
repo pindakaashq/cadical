@@ -3,6 +3,11 @@
 #include <climits>
 #include <cstring>
 
+#ifdef _MSC_VER
+#include <intrin.h>
+#define __builtin_clz(x) _lzcnt_u32(x)
+#endif
+
 void Reap::init () {
   for (auto &bucket : buckets)
     bucket = {0};
