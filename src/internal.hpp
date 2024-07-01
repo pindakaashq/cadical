@@ -1546,6 +1546,7 @@ inline bool Internal::terminated_asynchronously (int factor) {
 inline bool Internal::search_limits_hit () {
   assert (!preprocessing);
   assert (!localsearching);
+  assert (lim.initialized);
 
   if (lim.conflicts >= 0 && stats.conflicts >= lim.conflicts) {
     LOG ("conflict limit %" PRId64 " reached", lim.conflicts);
