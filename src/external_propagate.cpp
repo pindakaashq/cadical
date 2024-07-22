@@ -124,9 +124,11 @@ bool Internal::external_propagate () {
 
   assert (!unsat);
 
+  bool external_change = true;
   size_t before = num_assigned;
 
-  if (!conflict && external_prop && !external_prop_is_lazy) {
+  while (external_change && !conflict && !unsat && external_prop && !external_prop_is_lazy) {
+  	external_change = false;
 #ifndef NDEBUG
     LOG ("external propagation starts (decision level: %d, trail size: "
          "%zd, notified %zd)",
@@ -141,6 +143,7 @@ bool Internal::external_propagate () {
     stats.ext_prop.ext_cb++;
     stats.ext_prop.eprop_call++;
     while (elit) {
+    	external_change = true;
       assert (external->is_observed[abs (elit)]);
       int ilit = external->e2i[abs (elit)];
       if (elit < 0)
@@ -216,6 +219,7 @@ bool Internal::external_propagate () {
 #endif
 
       while (has_external_clause) {
+      	external_change = true;
         int level_before = level;
         size_t assigned = num_assigned;
 
