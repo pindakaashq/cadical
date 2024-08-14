@@ -5,8 +5,12 @@ namespace CaDiCaL {
 
 External::External (Internal *i)
     : internal (i), max_var (0), vsize (0), extended (false),
-      concluded (false), terminator (0), learner (0), propagator (0),
-      solution (0), vars (max_var) {
+      concluded (false), terminator (0), learner (0), propagator_data (0),
+      prop_is_lazy (true), prop_notify_assignment (0),
+      prop_notify_new_decision_level (0), prop_notify_backtrack (0),
+      prop_cb_check_found_model (0), prop_cb_decide (0), prop_cb_propagate (0),
+      prop_cb_add_reason_clause_lit (0), prop_cb_has_external_clause (0),
+      prop_cb_add_external_clause_lit(0), solution (0), vars (max_var) {
   assert (internal);
   assert (!internal->external);
   internal->external = this;
@@ -203,7 +207,7 @@ void External::assume (int elit) {
 bool External::flip (int elit) {
   assert (elit);
   assert (elit != INT_MIN);
-  assert (!propagator);
+  assert (!propagator_data);
 
   int eidx = abs (elit);
   if (eidx > max_var)
@@ -222,7 +226,7 @@ bool External::flip (int elit) {
 bool External::flippable (int elit) {
   assert (elit);
   assert (elit != INT_MIN);
-  assert (!propagator);
+  assert (!propagator_data);
 
   int eidx = abs (elit);
   if (eidx > max_var)
@@ -300,7 +304,7 @@ void External::unphase (int elit) {
 // External propagation related functions
 
 void External::add_observed_var (int elit) {
-  if (!propagator) {
+  if (!propagator_data) {
     LOG ("No connected propagator that could observe the variable, "
          "observed flag is not set.");
     return;
@@ -339,7 +343,7 @@ void External::add_observed_var (int elit) {
   int ilit = internalize (elit);
   internal->add_observed_var (ilit);
 
-  if (propagator->is_lazy)
+  if (prop_is_lazy)
     return;
 
   // Fixed variables are notified only upon assignment. In case
@@ -353,11 +357,11 @@ void External::add_observed_var (int elit) {
 
   LOG ("notify propagator about fixed assignment upon observe for %d",
        unit);
-  propagator->notify_assignment (unit, true);
+  prop_notify_assignment (propagator_data, unit, true);
 }
 
 void External::remove_observed_var (int elit) {
-  if (!propagator) {
+  if (!propagator_data) {
     LOG ("No connected propagator that could have watched the variable");
     return;
   }
@@ -380,7 +384,7 @@ void External::remove_observed_var (int elit) {
 
 void External::reset_observed_vars () {
   // Shouldn't be called if there is no connected propagator
-  assert (propagator);
+  assert (propagator_data);
   reset_extended ();
 
   internal->notified = 0;

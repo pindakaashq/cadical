@@ -7,7 +7,7 @@ void Internal::mark_fixed (int lit) {
     int elit = externalize (lit);
     assert (elit && external->observed (elit));
 
-    external->propagator->notify_assignment (elit, true);
+    external->prop_notify_assignment (external->propagator_data, elit, true);
     // Does not increase the notified counter because
     // it is a separated way of notification.
   }

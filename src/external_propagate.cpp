@@ -139,7 +139,7 @@ bool Internal::external_propagate () {
 
     notify_assignments ();
 
-    int elit = external->propagator->cb_propagate ();
+    int elit = external->prop_cb_propagate (external->propagator_data);
     stats.ext_prop.ext_cb++;
     stats.ext_prop.eprop_call++;
     while (elit) {
@@ -196,7 +196,7 @@ bool Internal::external_propagate () {
           notify_assignments ();
         }
       } // else (tmp > 0) -> the case of a satisfied literal is ignored
-      elit = external->propagator->cb_propagate ();
+      elit = external->prop_cb_propagate (external->propagator_data);
       stats.ext_prop.ext_cb++;
       stats.ext_prop.eprop_call++;
     }
@@ -207,8 +207,7 @@ bool Internal::external_propagate () {
          level, trail.size (), notified);
 #endif
     if (!unsat && !conflict) {
-      bool has_external_clause =
-          external->propagator->cb_has_external_clause ();
+      bool has_external_clause = external->prop_cb_has_external_clause (external->propagator_data);
       stats.ext_prop.ext_cb++;
       stats.ext_prop.elearn_call++;
 #ifndef NDEBUG
@@ -237,8 +236,10 @@ bool Internal::external_propagate () {
             break;
           notify_assignments ();
         }
-        has_external_clause =
-            external->propagator->cb_has_external_clause ();
+        has_external_clause = false;
+        if (external->prop_cb_has_external_clause != nullptr) {
+        	has_external_clause = external->prop_cb_has_external_clause (external->propagator_data);
+        }
         stats.ext_prop.ext_cb++;
         stats.ext_prop.elearn_call++;
       }
@@ -344,9 +345,9 @@ void Internal::add_external_clause (int propagated_elit,
 #ifndef NDEBUG
     LOG ("add external reason of propagated lit: %d", propagated_elit);
 #endif
-    elit = external->propagator->cb_add_reason_clause_lit (propagated_elit);
+    elit = external->prop_cb_add_reason_clause_lit (external->propagator_data, propagated_elit);
   } else
-    elit = external->propagator->cb_add_external_clause_lit ();
+    elit = external->prop_cb_add_external_clause_lit (external->propagator_data);
 
   // Read out the external lemma into original and simplify it into clause
   assert (clause.empty ());
@@ -366,9 +367,9 @@ void Internal::add_external_clause (int propagated_elit,
     external->add (elit);
     if (propagated_elit)
       elit =
-          external->propagator->cb_add_reason_clause_lit (propagated_elit);
+          external->prop_cb_add_reason_clause_lit (external->propagator_data, propagated_elit);
     else
-      elit = external->propagator->cb_add_external_clause_lit ();
+      elit = external->prop_cb_add_external_clause_lit (external->propagator_data);
   }
   external->add (elit);
   assert (original.empty ());
@@ -504,7 +505,7 @@ void Internal::explain_external_propagations () {
 Clause *Internal::learn_external_reason_clause (int ilit,
                                                 int falsified_elit,
                                                 bool no_backtrack) {
-  assert (external->propagator);
+  assert (external->propagator_data);
 
   assert (clause.empty ());
   assert (original.empty ());
@@ -682,7 +683,7 @@ bool Internal::external_check_solution () {
     }
 
     bool is_consistent =
-        external->propagator->cb_check_found_model (etrail);
+        external->prop_cb_check_found_model (external->propagator_data, etrail.data(), etrail.size());
     stats.ext_prop.ext_cb++;
     if (is_consistent) {
       LOG ("Found solution is approved by external propagator.");
@@ -690,7 +691,7 @@ bool Internal::external_check_solution () {
     }
 
     bool has_external_clause =
-        external->propagator->cb_has_external_clause ();
+        external->prop_cb_has_external_clause (external->propagator_data);
     stats.ext_prop.ext_cb++;
     stats.ext_prop.elearn_call++;
     assert (has_external_clause);
@@ -724,7 +725,7 @@ bool Internal::external_check_solution () {
       //
       if (unsat || conflict || trail_changed)
         break;
-      has_external_clause = external->propagator->cb_has_external_clause ();
+      has_external_clause = external->prop_cb_has_external_clause (external->propagator_data);
       stats.ext_prop.ext_cb++;
       stats.ext_prop.elearn_call++;
     }
@@ -762,7 +763,7 @@ void Internal::notify_assignments () {
     int elit = externalize (ilit); // TODO: double-check tainting
     assert (elit);
     assert (external->observed (elit));
-    external->propagator->notify_assignment (elit, false);
+    external->prop_notify_assignment (external->propagator_data, elit, false);
   }
 }
 
@@ -780,7 +781,7 @@ void Internal::connect_propagator () {
 void Internal::notify_decision () {
   if (!external_prop || external_prop_is_lazy)
     return;
-  external->propagator->notify_new_decision_level ();
+  external->prop_notify_new_decision_level (external->propagator_data);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -790,7 +791,7 @@ void Internal::notify_decision () {
 void Internal::notify_backtrack (size_t new_level) {
   if (!external_prop || external_prop_is_lazy)
     return;
-  external->propagator->notify_backtrack (new_level);
+  external->prop_notify_backtrack (external->propagator_data, new_level);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -801,7 +802,7 @@ void Internal::notify_backtrack (size_t new_level) {
 int Internal::ask_decision () {
   if (!external_prop || external_prop_is_lazy)
     return 0;
-  int elit = external->propagator->cb_decide ();
+  int elit = external->prop_cb_decide (external->propagator_data);
   stats.ext_prop.ext_cb++;
 
   if (!elit)
