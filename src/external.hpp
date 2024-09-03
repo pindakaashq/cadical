@@ -113,7 +113,7 @@ struct External {
   void (*prop_notify_assignments) (void* prop, const int* lits, size_t size);
   void (*prop_notify_fixed_assignment) (void* prop, int lit);
   void (*prop_notify_new_decision_level) (void* prop);
-  void (*prop_notify_backtrack) (void* prop, size_t new_level);
+  void (*prop_notify_backtrack) (void* prop, size_t new_level, bool restart);
   bool (*prop_cb_check_found_model) (void* prop, const int* model, size_t size);
   int (*prop_cb_decide) (void* prop);
   int (*prop_cb_propagate) (void* prop);
