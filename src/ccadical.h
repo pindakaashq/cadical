@@ -41,7 +41,7 @@ struct _CExternalPropagator {
   bool are_reasons_forgettable;
   void (*notify_assignments)(void *data, const int *lits, size_t size);
   void (*notify_new_decision_level)(void *data);
-  void (*notify_backtrack)(void *data, size_t new_level);
+  void (*notify_backtrack)(void *data, size_t new_level, bool restart);
   bool (*check_found_model)(void *data, const int *model, size_t size);
   int (*decide)(void *data);
   int (*propagate)(void *data);
