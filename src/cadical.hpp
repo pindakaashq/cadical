@@ -393,7 +393,7 @@ public:
   	void *propagator_data,
 		void (*prop_notify_assignments) (void* prop, const int* lits, size_t size),
 		void (*prop_notify_new_decision_level) (void* prop),
-		void (*prop_notify_backtrack) (void* prop, size_t new_level),
+		void (*prop_notify_backtrack) (void* prop, size_t new_level, bool restart),
 		bool (*prop_cb_check_found_model) (void* prop, const int* model, size_t size),
 		bool (*prop_cb_has_external_clause) (void* prop, bool* is_forgettable),
 		int (*prop_cb_add_external_clause_lit) (void* prop),
@@ -1177,10 +1177,10 @@ public:
   // the call of propagator callbacks and when a driving clause is leading
   // to an assignment.
   //
-  //virtual void notify_assignment (int lit, bool is_fixed) = 0;
+  // [PATCH] add `restart` argument to `notify_backtrack`
   virtual void notify_assignment (const std::vector<int>& lits) = 0;
   virtual void notify_new_decision_level () = 0;
-  virtual void notify_backtrack (size_t new_level) = 0;
+  virtual void notify_backtrack (size_t new_level, bool restart) = 0;
 
   // Check by the external propagator the found complete solution (after
   // solution reconstruction). If it returns false, the propagator must
