@@ -788,10 +788,10 @@ void Internal::notify_decision () {
 //
 // Notify the external propagator that backtrack to new_level.
 //
-void Internal::notify_backtrack (size_t new_level) {
+void Internal::notify_backtrack (size_t new_level, bool restart) {
   if (!external_prop || external_prop_is_lazy)
     return;
-  external->prop_notify_backtrack (external->propagator_data, new_level);
+  external->prop_notify_backtrack (external->propagator_data, new_level, restart);
 }
 
 /*----------------------------------------------------------------------------*/

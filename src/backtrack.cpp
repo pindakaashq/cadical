@@ -73,7 +73,7 @@ void Internal::update_target_and_best () {
 
 /*------------------------------------------------------------------------*/
 
-void Internal::backtrack (int new_level) {
+void Internal::backtrack (int new_level, bool restart) {
 
   assert (new_level <= level);
   if (new_level == level)
@@ -97,7 +97,7 @@ void Internal::backtrack (int new_level) {
 #endif
   int reassigned = 0;
 
-  notify_backtrack (new_level);
+  notify_backtrack (new_level, restart);
   if (external_prop && !external_prop_is_lazy && notified > assigned) {
     LOG ("external propagator is notified about some unassignments (trail: "
          "%zd, notified: %zd).",

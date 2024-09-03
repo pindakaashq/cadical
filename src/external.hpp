@@ -102,7 +102,7 @@ struct External {
   bool prop_is_lazy;
   void (*prop_notify_assignment) (void* prop, int lit, bool is_fixed);
   void (*prop_notify_new_decision_level) (void* prop);
-  void (*prop_notify_backtrack) (void* prop, size_t new_level);
+  void (*prop_notify_backtrack) (void* prop, size_t new_level, bool restart);
   bool (*prop_cb_check_found_model) (void* prop, const int* model, size_t size);
   int (*prop_cb_decide) (void* prop);
   int (*prop_cb_propagate) (void* prop);
