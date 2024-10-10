@@ -100,11 +100,26 @@ struct External {
 
   // If there is a listener for fixed assignments.
 
-  FixedAssignmentListener *fixed_listener;
+  // FixedAssignmentListener *fixed_listener;
 
   // If there is an external propagator.
 
-  ExternalPropagator *propagator;
+  // ExternalPropagator *propagator;
+
+  void *propagator_data;
+  bool prop_is_lazy;
+  bool prop_forgettable_reasons;
+  bool prop_notify_fixed_event;
+  void (*prop_notify_assignments) (void* prop, const int* lits, size_t size);
+  void (*prop_notify_fixed_assignment) (void* prop, int lit);
+  void (*prop_notify_new_decision_level) (void* prop);
+  void (*prop_notify_backtrack) (void* prop, size_t new_level);
+  bool (*prop_cb_check_found_model) (void* prop, const int* model, size_t size);
+  int (*prop_cb_decide) (void* prop);
+  int (*prop_cb_propagate) (void* prop);
+  int (*prop_cb_add_reason_clause_lit) (void* prop, int propagated_lit);
+  bool (*prop_cb_has_external_clause) (void* prop, bool* is_forgettable);
+  int (*prop_cb_add_external_clause_lit) (void* prop);
 
   vector<bool> is_observed; // Quick flag for each external variable
 
