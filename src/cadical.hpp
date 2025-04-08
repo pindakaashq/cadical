@@ -448,6 +448,13 @@ public:
   //
   bool is_decision (int lit);
 
+  // Check whether a literal is observed by an external propagator.
+  //
+  //   require (VALID_OR_SOLVING)
+  //   ensure (VALID_OR_SOLVING)
+  //
+  bool is_observed (int lit);
+
   // Force solve to backtrack to certain decision level. Can be called only
   // during 'cb_decide' of a connected External Propagator.
   // Invoking in any other time will not have an effect.
