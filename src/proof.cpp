@@ -130,7 +130,14 @@ void Proof::disconnect (Tracer *t) {
 // Enable proof tracing.
 
 void Internal::trace (File *file) {
-  if (opts.veripb) {
+  if (opts.huubtracer) {
+    LOG ("PROOF connecting VeriPB (HUUB) tracer");
+    bool antecedents = opts.huubtracer == 1 || opts.huubtracer == 2;
+    bool deletions = opts.huubtracer == 2 || opts.huubtracer == 4;
+    FileTracer *ft =
+        new HuubTracer (this, file, opts.binary, antecedents, deletions);
+    connect_proof_tracer (ft, antecedents);
+  } else if (opts.veripb) {
     LOG ("PROOF connecting VeriPB tracer");
     bool antecedents = opts.veripb == 1 || opts.veripb == 2;
     bool deletions = opts.veripb == 2 || opts.veripb == 4;
@@ -201,6 +208,13 @@ void Internal::close_trace (bool print) {
 void Internal::flush_trace (bool print) {
   for (auto &tracer : file_tracers)
     tracer->flush (print);
+}
+
+// Manually begin the proof (with the specified reserved id count)
+// (Added for Huub logging specifically), where id will always be 0
+void Internal::begin_proof (uint64_t id) {
+  if (proof)
+    proof->begin_proof(id);
 }
 
 /*------------------------------------------------------------------------*/

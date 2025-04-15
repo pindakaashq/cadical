@@ -66,6 +66,7 @@ extern "C" {
 #include "format.hpp"
 #include "frattracer.hpp"
 #include "heap.hpp"
+#include "huubtracer.hpp"
 #include "idruptracer.hpp"
 #include "instantiate.hpp"
 #include "internal.hpp"
@@ -1379,6 +1380,10 @@ struct Internal {
   bool disconnect_proof_tracer (FileTracer *tracer);
   void conclude_unsat ();
   void reset_concluded ();
+  
+  // Manually begin the proof
+  // (Added for Huub)
+  void begin_proof (uint64_t);   
 
   // Dump to '<stdout>' as DIMACS for debugging.
   //
