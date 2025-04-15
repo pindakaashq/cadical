@@ -66,6 +66,7 @@ extern "C" {
 #include "format.hpp"
 #include "frattracer.hpp"
 #include "heap.hpp"
+#include "huubtracer.hpp"
 #include "idruptracer.hpp"
 #include "instantiate.hpp"
 #include "internal.hpp"
