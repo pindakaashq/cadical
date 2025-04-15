@@ -35,11 +35,11 @@ HuubTracer::HuubTracer (Internal *i, File *f, bool b, bool a, bool c)
 void HuubTracer::connect_internal (Internal *i) {
   internal = i;
   file->connect_internal (internal);
-  LOG ("VERIPB TRACER connected to internal");
+  LOG ("VERIPB (HUUB) TRACER connected to internal");
 }
 
 HuubTracer::~HuubTracer () {
-  LOG ("VERIPB TRACER delete");
+  LOG ("VERIPB (HUUB) TRACER delete");
   delete file;
   for (size_t i = 0; i < size_clauses; i++)
     for (HashId *c = clauses[i], *next; c; c = next)
@@ -52,7 +52,7 @@ HuubTracer::~HuubTracer () {
 void HuubTracer::enlarge_clauses () {
   assert (num_clauses == size_clauses);
   const uint64_t new_size_clauses = size_clauses ? 2 * size_clauses : 1;
-  LOG ("VeriPB Tracer enlarging clauses from %" PRIu64 " to %" PRIu64,
+  LOG ("VeriPB (HUUB) Tracer enlarging clauses from %" PRIu64 " to %" PRIu64,
        (uint64_t) size_clauses, (uint64_t) new_size_clauses);
   HashId **new_clauses;
   new_clauses = new HashId *[new_size_clauses];
@@ -281,7 +281,7 @@ void HuubTracer::veripb_strengthen (uint64_t id) {
 void HuubTracer::begin_proof (uint64_t id) {
   if (file->closed ())
     return;
-  LOG ("VERIPB TRACER tracing start of proof with %" PRId64
+  LOG ("VERIPB (HUUB) TRACER tracing start of proof with %" PRId64
        "original clauses",
        id);
   veripb_begin_proof (id);
@@ -292,7 +292,7 @@ void HuubTracer::add_derived_clause (uint64_t id, bool redundant,
                                        const vector<uint64_t> &chain) {
   if (file->closed ())
     return;
-  LOG ("VERIPB TRACER tracing addition of derived clause[%" PRId64 "]", id);
+  LOG ("VERIPB (HUUB) TRACER tracing addition of derived clause[%" PRId64 "]", id);
   if (with_antecedents)
     veripb_add_derived_clause (id, redundant, clause, chain);
   else
@@ -306,7 +306,7 @@ void HuubTracer::delete_clause (uint64_t id, bool redundant,
                                   const vector<int> &) {
   if (file->closed ())
     return;
-  LOG ("VERIPB TRACER tracing deletion of clause[%" PRId64 "]", id);
+  LOG ("VERIPB (HUUB) TRACER tracing deletion of clause[%" PRId64 "]", id);
   veripb_delete_clause (id, redundant);
 #ifndef QUIET
   deleted++;
@@ -318,7 +318,7 @@ void HuubTracer::report_status (int status, uint64_t conflict_id) {
     return;
 #ifdef LOGGING
   if (conflict_id)
-    LOG ("VERIPB TRACER tracing finalization of proof with empty "
+    LOG ("VERIPB (HUUB) TRACER tracing finalization of proof with empty "
          "clause[%" PRId64 "]",
          conflict_id);
 #endif
@@ -330,7 +330,7 @@ void HuubTracer::weaken_minus (uint64_t id, const vector<int> &) {
     return;
   if (file->closed ())
     return;
-  LOG ("VERIPB TRACER tracing weaken minus of clause[%" PRId64 "]", id);
+  LOG ("VERIPB (HUUB) TRACER tracing weaken minus of clause[%" PRId64 "]", id);
   last_id = id;
   insert ();
 }
@@ -338,7 +338,7 @@ void HuubTracer::weaken_minus (uint64_t id, const vector<int> &) {
 void HuubTracer::strengthen (uint64_t id) {
   if (file->closed ())
     return;
-  LOG ("VERIPB TRACER tracing strengthen of clause[%" PRId64 "]", id);
+  LOG ("VERIPB (HUUB) TRACER tracing strengthen of clause[%" PRId64 "]", id);
   veripb_strengthen (id);
 }
 
@@ -352,11 +352,11 @@ void HuubTracer::print_statistics () {
   // TODO complete
   uint64_t bytes = file->bytes ();
   uint64_t total = added + deleted;
-  MSG ("VeriPB %" PRId64 " added clauses %.2f%%", added,
+  MSG ("VeriPB (HUUB) %" PRId64 " added clauses %.2f%%", added,
        percent (added, total));
-  MSG ("VeriPB %" PRId64 " deleted clauses %.2f%%", deleted,
+  MSG ("VeriPB (HUUB) %" PRId64 " deleted clauses %.2f%%", deleted,
        percent (deleted, total));
-  MSG ("VeriPB %" PRId64 " bytes (%.2f MB)", bytes,
+  MSG ("VeriPB (HUUB) %" PRId64 " bytes (%.2f MB)", bytes,
        bytes / (double) (1 << 20));
 }
 
@@ -367,7 +367,7 @@ void HuubTracer::close (bool print) {
   file->close ();
 #ifndef QUIET
   if (print) {
-    MSG ("VeriPB proof file '%s' closed", file->name ());
+    MSG ("VeriPB (HUUB) proof file '%s' closed", file->name ());
     print_statistics ();
   }
 #else
@@ -380,7 +380,7 @@ void HuubTracer::flush (bool print) {
   file->flush ();
 #ifndef QUIET
   if (print) {
-    MSG ("VeriPB proof file '%s' flushed", file->name ());
+    MSG ("VeriPB (HUUB) proof file '%s' flushed", file->name ());
     print_statistics ();
   }
 #else
