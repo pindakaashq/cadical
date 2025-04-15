@@ -186,21 +186,26 @@ inline void HuubTracer::put_binary_id (uint64_t id) {
 void HuubTracer::veripb_add_derived_clause (
     uint64_t id, bool redundant, const vector<int> &clause,
     const vector<uint64_t> &chain) {
-  file->put ("pol ");
+  file->put ("label_name @c");
+  file->put (id);
+  file->put (" pol ");
   bool first = true;
   for (auto p = chain.rbegin (); p != chain.rend (); p++) {
     auto cid = *p;
     if (first) {
       first = false;
+      file->put ("@c");
       file->put (cid);
     } else {
       file->put (' ');
+      file->put ("@c");
       file->put (cid);
       file->put (" + s");
     }
   }
   file->put ("\n");
   file->put ("e ");
+  file->put ("@c");
   file->put (id);
   file->put (" : ");
   for (const auto &external_lit : clause) {
@@ -214,6 +219,7 @@ void HuubTracer::veripb_add_derived_clause (
   file->put (">= 1 ;\n");
   if (!redundant && checked_deletions) {
     file->put ("core id ");
+    file->put ("@c");
     file->put (id);
     file->put ("\n");
   }
@@ -221,7 +227,9 @@ void HuubTracer::veripb_add_derived_clause (
 
 void HuubTracer::veripb_add_derived_clause (uint64_t id, bool redundant,
                                               const vector<int> &clause) {
-  file->put ("rup ");
+  file->put ("label_name @c");
+  file->put (id);
+  file->put (" rup ");
   for (const auto &external_lit : clause) {
     file->put ("1 ");
     if (external_lit < 0)
@@ -233,6 +241,7 @@ void HuubTracer::veripb_add_derived_clause (uint64_t id, bool redundant,
   file->put (">= 1 ;\n");
   if (!redundant && checked_deletions) {
     file->put ("core id ");
+    file->put ("@c");
     file->put (id);
     file->put ("\n");
   }
@@ -246,6 +255,7 @@ void HuubTracer::veripb_delete_clause (uint64_t id, bool redundant) {
   else {
     file->put ("delc ");
   }
+  file->put ("@c");
   file->put (id);
   file->put ("\n");
 }
@@ -254,6 +264,7 @@ void HuubTracer::veripb_strengthen (uint64_t id) {
   if (!checked_deletions)
     return;
   file->put ("core id ");
+  file->put ("@c");
   file->put (id);
   file->put ("\n");
 }
