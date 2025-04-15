@@ -238,13 +238,6 @@ void HuubTracer::veripb_add_derived_clause (uint64_t id, bool redundant,
   }
 }
 
-void HuubTracer::veripb_begin_proof (uint64_t reserved_ids) {
-  file->put ("pseudo-Boolean proof version 2.0\n");
-  file->put ("f ");
-  file->put (reserved_ids);
-  file->put ("\n");
-}
-
 void HuubTracer::veripb_delete_clause (uint64_t id, bool redundant) {
   if (!redundant && checked_deletions && find_and_delete (id))
     return;
@@ -257,17 +250,6 @@ void HuubTracer::veripb_delete_clause (uint64_t id, bool redundant) {
   file->put ("\n");
 }
 
-void HuubTracer::veripb_report_status (bool unsat, uint64_t conflict_id) {
-  file->put ("output NONE\n");
-  if (unsat) {
-    file->put ("conclusion UNSAT : ");
-    file->put (conflict_id);
-    file->put (" \n");
-  } else
-    file->put ("conclusion NONE\n");
-  file->put ("end pseudo-Boolean proof\n");
-}
-
 void HuubTracer::veripb_strengthen (uint64_t id) {
   if (!checked_deletions)
     return;
@@ -277,15 +259,6 @@ void HuubTracer::veripb_strengthen (uint64_t id) {
 }
 
 /*------------------------------------------------------------------------*/
-
-void HuubTracer::begin_proof (uint64_t id) {
-  if (file->closed ())
-    return;
-  LOG ("VERIPB (HUUB) TRACER tracing start of proof with %" PRId64
-       "original clauses",
-       id);
-  veripb_begin_proof (id);
-}
 
 void HuubTracer::add_derived_clause (uint64_t id, bool redundant,
                                        const vector<int> &clause,
@@ -311,18 +284,6 @@ void HuubTracer::delete_clause (uint64_t id, bool redundant,
 #ifndef QUIET
   deleted++;
 #endif
-}
-
-void HuubTracer::report_status (int status, uint64_t conflict_id) {
-  if (file->closed ())
-    return;
-#ifdef LOGGING
-  if (conflict_id)
-    LOG ("VERIPB (HUUB) TRACER tracing finalization of proof with empty "
-         "clause[%" PRId64 "]",
-         conflict_id);
-#endif
-  veripb_report_status (status == UNSATISFIABLE, conflict_id);
 }
 
 void HuubTracer::weaken_minus (uint64_t id, const vector<int> &) {

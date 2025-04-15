@@ -69,7 +69,7 @@ public:
   ~HuubTracer ();
 
   void connect_internal (Internal *i) override;
-  void begin_proof (uint64_t) override;
+  void begin_proof (uint64_t) override {} // skip (leave to huub)
 
   void add_original_clause (uint64_t, bool, const vector<int> &,
                             bool = false) override {} // skip
@@ -80,7 +80,7 @@ public:
   void delete_clause (uint64_t, bool, const vector<int> &) override;
   void finalize_clause (uint64_t, const vector<int> &) override {} // skip
 
-  void report_status (int, uint64_t) override;
+  void report_status (int, uint64_t) override {} // skip (leave to huub)
 
   void weaken_minus (uint64_t, const vector<int> &) override;
   void strengthen (uint64_t) override;
