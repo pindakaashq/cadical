@@ -183,10 +183,17 @@ inline void HuubTracer::put_binary_id (uint64_t id) {
 
 /*------------------------------------------------------------------------*/
 
+void HuubTracer::veripb_begin_proof (uint64_t reserved_ids) {
+  file->put ("pseudo-Boolean proof version 2.0\n");
+  file->put ("f ");
+  file->put (reserved_ids);
+  file->put ("\n");
+}
+
 void HuubTracer::veripb_add_derived_clause (
     uint64_t id, bool redundant, const vector<int> &clause,
     const vector<uint64_t> &chain) {
-  file->put ("label_name @c");
+  file->put ("@c");
   file->put (id);
   file->put (" pol ");
   bool first = true;
@@ -204,10 +211,7 @@ void HuubTracer::veripb_add_derived_clause (
     }
   }
   file->put ("\n");
-  file->put ("e ");
-  file->put ("@c");
-  file->put (id);
-  file->put (" : ");
+  file->put (" e ");
   for (const auto &external_lit : clause) {
     file->put ("1 ");
     if (external_lit < 0)
@@ -216,7 +220,9 @@ void HuubTracer::veripb_add_derived_clause (
     file->put (abs (external_lit));
     file->put (' ');
   }
-  file->put (">= 1 ;\n");
+  file->put (">= 1 ; @c");
+  file->put (id);
+  file->put("\n");
   if (!redundant && checked_deletions) {
     file->put ("core id ");
     file->put ("@c");
@@ -226,10 +232,14 @@ void HuubTracer::veripb_add_derived_clause (
 }
 
 void HuubTracer::veripb_add_derived_clause (uint64_t id, bool redundant,
-                                              const vector<int> &clause) {
-  file->put ("label_name @c");
+                                              const vector<int> &clause, bool asserted = false) {
+  file->put ("@c");
   file->put (id);
-  file->put (" rup ");
+  if ( asserted )
+    file->put (" a ");
+  else
+    file->put (" rup ");
+
   for (const auto &external_lit : clause) {
     file->put ("1 ");
     if (external_lit < 0)
@@ -271,6 +281,15 @@ void HuubTracer::veripb_strengthen (uint64_t id) {
 
 /*------------------------------------------------------------------------*/
 
+void HuubTracer::begin_proof (uint64_t id) {
+  if (file->closed ())
+    return;
+  LOG ("VERIPB TRACER tracing start of proof with %" PRId64
+       "original clauses",
+       id);
+  veripb_begin_proof (id);
+}
+
 void HuubTracer::add_derived_clause (uint64_t id, bool redundant,
                                        const vector<int> &clause,
                                        const vector<uint64_t> &chain) {
@@ -283,6 +302,17 @@ void HuubTracer::add_derived_clause (uint64_t id, bool redundant,
     veripb_add_derived_clause (id, redundant, clause);
 #ifndef QUIET
   added++;
+#endif
+}
+
+void HuubTracer::add_original_clause (uint64_t id, bool redundant,
+  const vector<int> &clause, bool) {
+if (file->closed ())
+return;
+LOG ("VERIPB (HUUB) TRACER tracing addition of original (external) clause[%" PRId64 "]", id);
+veripb_add_derived_clause (id, redundant, clause, true);
+#ifndef QUIET
+added++;
 #endif
 }
 
@@ -359,5 +389,4 @@ void HuubTracer::flush (bool print) {
   (void) print;
 #endif
 }
-
 } // namespace CaDiCaL

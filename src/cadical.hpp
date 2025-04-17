@@ -802,6 +802,7 @@ public:
   //
   bool trace_proof (FILE *file, const char *name); // Write DRAT proof.
   bool trace_proof (const char *path);             // Open & write proof.
+  void begin_proof(uint64_t id);
 
   // Flushing the proof trace file eventually calls 'fflush' on the actual
   // file or pipe and thus if this function returns all the proof steps

@@ -1365,8 +1365,7 @@ struct Internal {
   void close_trace (bool stats = false); // Stop proof tracing.
   void flush_trace (bool stats = false); // Flush proof trace file.
   void trace (File *);                   // Start write proof file.
-  void check ();                         // Enable online proof checking.
-
+  void check ();                         // Enable online proof checking.    
   void connect_proof_tracer (Tracer *tracer, bool antecedents,
                              bool finalize_clauses = false);
   void connect_proof_tracer (InternalTracer *tracer, bool antecedents,
@@ -1380,6 +1379,10 @@ struct Internal {
   bool disconnect_proof_tracer (FileTracer *tracer);
   void conclude_unsat ();
   void reset_concluded ();
+  
+  // Manually begin the proof
+  // (Added for Huub)
+  void begin_proof (uint64_t);   
 
   // Dump to '<stdout>' as DIMACS for debugging.
   //

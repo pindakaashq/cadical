@@ -1209,6 +1209,11 @@ void Solver::close_proof_trace (bool print_statistics_unless_quiet) {
   LOG_API_CALL_END ("close_proof_trace");
 }
 
+void Solver::begin_proof (uint64_t id) {
+  TRACE ("begin_proof", id);
+  internal->begin_proof (id);
+}
+
 /*------------------------------------------------------------------------*/
 
 void Solver::connect_proof_tracer (Tracer *tracer, bool antecedents,

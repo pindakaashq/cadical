@@ -210,6 +210,13 @@ void Internal::flush_trace (bool print) {
     tracer->flush (print);
 }
 
+// Manually begin the proof (with the specified reserved id count)
+// (Added for Huub logging specifically), where id will always be 0
+void Internal::begin_proof (uint64_t id) {
+  if (proof)
+    proof->begin_proof(id);
+}
+
 /*------------------------------------------------------------------------*/
 
 Proof::Proof (Internal *s) : internal (s), lratbuilder (0) {

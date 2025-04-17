@@ -8,7 +8,6 @@ namespace CaDiCaL {
 struct HashId; 
 
 class HuubTracer : public FileTracer {
-
   Internal *internal;
   File *file;
 #ifndef NDEBUG
@@ -57,7 +56,7 @@ class HuubTracer : public FileTracer {
                                   const vector<int> &clause,
                                   const vector<uint64_t> &chain);
   void veripb_add_derived_clause (uint64_t, bool redundant,
-                                  const vector<int> &clause);
+                                  const vector<int> &clause, bool asserted);
   void veripb_begin_proof (uint64_t reserved_ids);
   void veripb_delete_clause (uint64_t id, bool redundant);
   void veripb_report_status (bool unsat, uint64_t conflict_id);
@@ -69,10 +68,10 @@ public:
   ~HuubTracer ();
 
   void connect_internal (Internal *i) override;
-  void begin_proof (uint64_t) override {} // skip (leave to huub)
+  void begin_proof (uint64_t) override;
 
   void add_original_clause (uint64_t, bool, const vector<int> &,
-                            bool = false) override {} // skip
+                            bool = false) override;
 
   void add_derived_clause (uint64_t, bool, const vector<int> &,
                            const vector<uint64_t> &) override;
@@ -80,11 +79,10 @@ public:
   void delete_clause (uint64_t, bool, const vector<int> &) override;
   void finalize_clause (uint64_t, const vector<int> &) override {} // skip
 
-  void report_status (int, uint64_t) override {} // skip (leave to huub)
+  void report_status (int, uint64_t) override {} // skip
 
   void weaken_minus (uint64_t, const vector<int> &) override;
   void strengthen (uint64_t) override;
-
 #ifndef QUIET
   void print_statistics ();
 #endif
