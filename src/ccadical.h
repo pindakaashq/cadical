@@ -100,6 +100,7 @@ int ccadical_simplify (CCaDiCaL *);
 // [PATCH] Additional C bindings for C++ Cadical
 
 CCaDiCaL *ccadical_copy(CCaDiCaL *slv);
+bool ccadical_is_observed(CCaDiCaL *, int lit);
 void ccadical_phase(CCaDiCaL *, int lit);
 void ccadical_unphase(CCaDiCaL *, int lit);
 

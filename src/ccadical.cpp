@@ -242,6 +242,10 @@ CCaDiCaL *ccadical_copy(CCaDiCaL *slv) {
   return (CCaDiCaL *)cp;
 }
 
+bool ccadical_is_observed(CCaDiCaL *slv, int lit){
+	return ((Wrapper *)slv)->solver->is_observed(lit);
+}
+
 void ccadical_phase(CCaDiCaL *slv, int lit) {
   ((Wrapper *)slv)->solver->phase(lit);
 }
