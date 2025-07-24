@@ -1,3 +1,4 @@
+#include "ccadical.h"
 #include "internal.hpp"
 #include <cstdint>
 
@@ -6,7 +7,7 @@ namespace CaDiCaL {
 External::External (Internal *i)
     : internal (i), max_var (0), vsize (0), extended (false),
       concluded (false), terminator (0), learner (0), fixed_listener (0),
-      propagator (0), solution (0), vars (max_var) {
+      propagator (empty_propagator), solution (0), vars (max_var) {
   assert (internal);
   assert (!internal->external);
   internal->external = this;
@@ -217,7 +218,7 @@ void External::assume (int elit) {
 bool External::flip (int elit) {
   assert (elit);
   assert (elit != INT_MIN);
-  assert (!propagator);
+  assert (!propagator.data);
 
   int eidx = abs (elit);
   if (eidx > max_var)
@@ -236,7 +237,7 @@ bool External::flip (int elit) {
 bool External::flippable (int elit) {
   assert (elit);
   assert (elit != INT_MIN);
-  assert (!propagator);
+  assert (!propagator.data);
 
   int eidx = abs (elit);
   if (eidx > max_var)
@@ -317,7 +318,7 @@ void External::unphase (int elit) {
 // solver will backtrack to undo this assignment.
 //
 void External::add_observed_var (int elit) {
-  if (!propagator) {
+  if (!propagator.data) {
     LOG ("No connected propagator that could observe the variable, "
          "observed flag is not set.");
     return;
@@ -359,7 +360,7 @@ void External::add_observed_var (int elit) {
   // not on the current level)
   internal->add_observed_var (ilit);
 
-  if (propagator->is_lazy)
+  if (propagator.is_lazy)
     return;
 
   // In case this variable was already assigned (e.g. via unit clause) and
@@ -380,11 +381,11 @@ void External::add_observed_var (int elit) {
   assert (!internal->level);
 
   std::vector<int> assigned = {unit};
-  propagator->notify_assignment (assigned);
+  propagator.notify_assignments (propagator.data, assigned.data(), assigned.size());
 }
 
 void External::remove_observed_var (int elit) {
-  if (!propagator) {
+  if (!propagator.data) {
     LOG ("No connected propagator that could have watched the variable");
     return;
   }
@@ -407,7 +408,7 @@ void External::remove_observed_var (int elit) {
 
 void External::reset_observed_vars () {
   // Shouldn't be called if there is no connected propagator
-  assert (propagator);
+  assert (propagator.data);
   reset_extended ();
 
   internal->notified = 0;
@@ -464,7 +465,7 @@ bool External::is_decision (int elit) {
 }
 
 void External::force_backtrack (size_t new_level) {
-  if (!propagator) {
+  if (!propagator.data) {
     LOG ("No connected propagator that could force backtracking");
     return;
   }
@@ -721,7 +722,7 @@ void External::check_assignment (int (External::*a) (int) const) {
   // reconstruction is allowed to touch the previously observed variables so
   // there is no guarantee that the final model will satisfy these clauses.)
   for (const auto &forgettables : forgettable_original) {
-    if (!propagator)
+    if (!propagator.data)
       break;
     presence_flag = true;
     satisfied = false;

@@ -33,6 +33,37 @@ void ccadical_set_learn (CCaDiCaL *, void *state, int max_length,
 
 /*------------------------------------------------------------------------*/
 
+// C wrapper for CaDiCaL's C++ API following IPASIR-UP.
+
+struct _CExternalPropagator {
+  void *data;
+  bool is_lazy;
+  bool are_reasons_forgettable;
+  void (*notify_assignments)(void *data, const int *lits, size_t size);
+  void (*notify_new_decision_level)(void *data);
+  void (*notify_backtrack)(void *data, size_t new_level);
+  bool (*check_found_model)(void *data, const int *model, size_t size);
+  int (*decide)(void *data);
+  int (*propagate)(void *data);
+  int (*add_reason_clause_lit)(void *data, int propagated_lit);
+  bool (*has_external_clause)(void *data, bool *is_forgettable);
+  int (*add_external_clause_lit)(void *data);
+};
+typedef struct _CExternalPropagator CExternalPropagator;
+
+extern const CExternalPropagator empty_propagator;
+
+void ccadical_connect_external_propagator(CCaDiCaL *, CExternalPropagator prop);
+void ccadical_disconnect_external_propagator(CCaDiCaL *);
+
+void ccadical_add_observed_var(CCaDiCaL *, int var);
+void ccadical_remove_observed_var(CCaDiCaL *, int var);
+void ccadical_reset_observed_vars(CCaDiCaL *);
+bool ccadical_is_decision(CCaDiCaL *, int lit);
+void ccadical_force_backtrack(CCaDiCaL *, size_t new_level);
+
+/*------------------------------------------------------------------------*/
+
 // Non-IPASIR conformant 'C' functions.
 
 void ccadical_constrain (CCaDiCaL *, int lit);

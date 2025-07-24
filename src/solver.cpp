@@ -1,3 +1,4 @@
+#include "ccadical.h"
 #include "internal.hpp"
 
 /*------------------------------------------------------------------------*/
@@ -806,7 +807,7 @@ bool Solver::flip (int lit) {
   REQUIRE_VALID_STATE ();
   REQUIRE_VALID_LIT (lit);
   REQUIRE (state () == SATISFIED, "can only flip value in satisfied state");
-  REQUIRE (!external->propagator,
+  REQUIRE (!external->propagator.data,
            "can only flip when no external propagator is present");
   bool res = external->flip (lit);
   LOG_API_CALL_RETURNS ("flip", lit, res);
@@ -819,7 +820,7 @@ bool Solver::flippable (int lit) {
   REQUIRE_VALID_STATE ();
   REQUIRE_VALID_LIT (lit);
   REQUIRE (state () == SATISFIED, "can only flip value in satisfied state");
-  REQUIRE (!external->propagator,
+  REQUIRE (!external->propagator.data,
            "can only flip when no external propagator is present");
   bool res = external->flippable (lit);
   LOG_API_CALL_RETURNS ("flippable", lit, res);
@@ -981,23 +982,24 @@ void Solver::disconnect_fixed_listener () {
 
 /*===== IPASIR-UP BEGIN ==================================================*/
 
-void Solver::connect_external_propagator (ExternalPropagator *propagator) {
+void Solver::connect_external_propagator (CExternalPropagator propagator) {
   LOG_API_CALL_BEGIN ("connect_external_propagator");
   REQUIRE_VALID_STATE ();
-  REQUIRE (propagator, "can not connect zero propagator");
+  REQUIRE (propagator.data, "can not connect zero propagator");
+
 #ifdef LOGGING
-  if (external->propagator)
+  if (external->propagator.data)
     LOG ("connecting new external propagator (disconnecting previous one)");
   else
     LOG ("connecting new external propagator (no previous one)");
 #endif
-  if (external->propagator)
+  if (external->propagator.data)
     disconnect_external_propagator ();
 
   external->propagator = propagator;
   internal->connect_propagator ();
   internal->external_prop = true;
-  internal->external_prop_is_lazy = propagator->is_lazy;
+  internal->external_prop_is_lazy = propagator.is_lazy;
   LOG_API_CALL_END ("connect_external_propagator");
 }
 
@@ -1006,15 +1008,15 @@ void Solver::disconnect_external_propagator () {
   REQUIRE_VALID_STATE ();
 
 #ifdef LOGGING
-  if (external->propagator)
+  if (external->propagator.data)
     LOG ("disconnecting previous external propagator");
   else
     LOG ("ignoring to disconnect external propagator (no previous one)");
 #endif
-  if (external->propagator)
+  if (external->propagator.data)
     external->reset_observed_vars ();
 
-  external->propagator = 0;
+  external->propagator = empty_propagator;
   internal->set_tainted_literal ();
   internal->external_prop = false;
   internal->external_prop_is_lazy = true;
@@ -1440,8 +1442,8 @@ void Solver::dump_cnf () {
 
 /*------------------------------------------------------------------------*/
 
-ExternalPropagator *Solver::get_propagator () {
-  return external->propagator;
+CExternalPropagator *Solver::get_propagator () {
+  return (external->propagator.data == nullptr) ? nullptr : &external->propagator;
 }
 
 bool Solver::observed (int lit) {

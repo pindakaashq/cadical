@@ -162,6 +162,49 @@ void ccadical_set_learn (CCaDiCaL *ptr, void *state, int max_length,
     wrapper->solver->disconnect_learner ();
 }
 
+// Default implementations for some of the ExternalPropagator callbacks
+int add_reason_clause_lit_default(void*, int) { return 0; }
+int decide_default(void*) { return 0; }
+int propagate_default(void*) { return 0; }
+
+const CExternalPropagator empty_propagator = {
+	/* .data = */ nullptr,
+	/* .is_lazy = */ false,
+	/* .are_reasons_forgettable = */ false,
+	/* .notify_assignments = */ nullptr,
+	/* .notify_new_decision_level = */ nullptr,
+	/* .notify_backtrack = */ nullptr,
+	/* .check_found_model = */ nullptr,
+	/* .decide = */ decide_default,
+	/* .propagate = */ propagate_default,
+	/* .add_reason_clause_lit = */ add_reason_clause_lit_default,
+	/* .has_external_clause = */ nullptr,
+	/* .add_external_clause_lit = */ nullptr,
+};
+
+void ccadical_connect_external_propagator(CCaDiCaL *slv, CExternalPropagator prop) {
+  ((Wrapper *)slv)->solver->connect_external_propagator(prop);
+}
+void ccadical_disconnect_external_propagator(CCaDiCaL *slv) {
+  ((Wrapper *)slv)->solver->disconnect_external_propagator();
+}
+
+void ccadical_add_observed_var(CCaDiCaL *slv, int var) {
+  ((Wrapper *)slv)->solver->add_observed_var(var);
+}
+void ccadical_remove_observed_var(CCaDiCaL *slv, int var) {
+  ((Wrapper *)slv)->solver->remove_observed_var(var);
+}
+void ccadical_reset_observed_vars(CCaDiCaL *slv) {
+  ((Wrapper *)slv)->solver->reset_observed_vars();
+}
+bool ccadical_is_decision(CCaDiCaL *slv, int lit) {
+  return ((Wrapper *)slv)->solver->is_decision(lit);
+}
+void ccadical_force_backtrack(CCaDiCaL *slv, size_t new_level) {
+  return ((Wrapper *)slv)->solver->force_backtrack(new_level);
+}
+
 void ccadical_freeze (CCaDiCaL *ptr, int lit) {
   ((Wrapper *) ptr)->solver->freeze (lit);
 }
