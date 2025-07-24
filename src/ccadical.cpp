@@ -261,3 +261,7 @@ CCaDiCaL *ccadical_copy(CCaDiCaL *slv) {
   ((Wrapper *)slv)->solver->copy(*cp->solver);
   return (CCaDiCaL *)cp;
 }
+
+bool ccadical_is_observed(CCaDiCaL *slv, int lit){
+	return ((Wrapper *)slv)->solver->is_observed(lit);
+}

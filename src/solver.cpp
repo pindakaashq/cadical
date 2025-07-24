@@ -1546,6 +1546,15 @@ bool Solver::is_decision (int lit) {
   return res;
 }
 
+bool Solver::is_observed (int lit) {
+  TRACE ("is_observed", lit);
+  REQUIRE_VALID_OR_SOLVING_STATE ();
+  REQUIRE_VALID_LIT (lit);
+  bool res = external->observed (lit);
+  LOG_API_CALL_RETURNS ("is_observed", lit, res);
+  return res;
+}
+
 void Solver::force_backtrack (size_t new_level) {
   TRACE ("force_backtrack", new_level);
   REQUIRE_VALID_OR_SOLVING_STATE ();

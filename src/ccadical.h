@@ -105,6 +105,7 @@ void ccadical_unphase (CCaDiCaL *wrapper, int lit);
 // [PATCH] Additional C bindings for C++ Cadical
 
 CCaDiCaL *ccadical_copy(CCaDiCaL *slv);
+bool ccadical_is_observed(CCaDiCaL *, int lit);
 
 /*------------------------------------------------------------------------*/
 
