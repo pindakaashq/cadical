@@ -1041,7 +1041,7 @@ void Internal::vivify_build_lrat (
     int lit, Clause *reason,
     std::vector<std::tuple<int, Clause *, bool>> &stack) {
   assert (stack.empty ());
-  stack.push_back ({lit, reason, false});
+  stack.emplace_back (lit, reason, false);
   while (!stack.empty ()) {
     int lit;
     Clause *reason;
@@ -1063,7 +1063,7 @@ void Internal::vivify_build_lrat (
       }
       continue;
     } else
-      stack.push_back ({lit, reason, true});
+      stack.emplace_back (lit, reason, true);
     for (const auto &other : *reason) {
       if (other == lit)
         continue;
@@ -1086,7 +1086,7 @@ void Internal::vivify_build_lrat (
       }
       if (v.reason) { // recursive justification
         LOG ("VIVIFY LRAT pushing %d", other);
-        stack.push_back ({other, v.reason, false});
+        stack.emplace_back (other, v.reason, false);
       }
     }
   }
