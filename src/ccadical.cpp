@@ -186,3 +186,17 @@ void ccadical_conclude (CCaDiCaL *ptr) {
   ((Wrapper *) ptr)->solver->conclude ();
 }
 }
+
+CCaDiCaL *ccadical_copy(CCaDiCaL *slv) {
+  auto *cp = new Wrapper();
+  ((Wrapper *)slv)->solver->copy(*cp->solver);
+  return (CCaDiCaL *)cp;
+}
+
+void ccadical_phase(CCaDiCaL *slv, int lit) {
+  ((Wrapper *)slv)->solver->phase(lit);
+}
+
+void ccadical_unphase(CCaDiCaL *slv, int lit) {
+  ((Wrapper *)slv)->solver->unphase(lit);
+}
