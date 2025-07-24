@@ -858,13 +858,13 @@ CraigTracer::create_craig_interpolant (CraigInterpolant interpolant,
   std::vector<std::tuple<std::vector<std::vector<int>> *, CraigCnfType>>
       craig_cnfs{};
   if (craig_cnf_type_sym != CraigCnfType::NONE)
-    craig_cnfs.push_back ({&craig_cnf_sym, craig_cnf_type_sym});
+    craig_cnfs.emplace_back (&craig_cnf_sym, craig_cnf_type_sym);
   if (craig_cnf_type_asym != CraigCnfType::NONE)
-    craig_cnfs.push_back ({&craig_cnf_asym, craig_cnf_type_asym});
+    craig_cnfs.emplace_back (&craig_cnf_asym, craig_cnf_type_asym);
   if (craig_cnf_type_dual_sym != CraigCnfType::NONE)
-    craig_cnfs.push_back ({&craig_cnf_dual_sym, craig_cnf_type_dual_sym});
+    craig_cnfs.emplace_back (&craig_cnf_dual_sym, craig_cnf_type_dual_sym);
   if (craig_cnf_type_dual_asym != CraigCnfType::NONE)
-    craig_cnfs.push_back ({&craig_cnf_dual_asym, craig_cnf_type_dual_asym});
+    craig_cnfs.emplace_back (&craig_cnf_dual_asym, craig_cnf_type_dual_asym);
 
   if (craig_cnfs.size () == 0) {
     return CraigCnfType::NONE;
