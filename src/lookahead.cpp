@@ -438,7 +438,7 @@ CubesWithStatus Internal::generate_cubes (int depth, int min_depth) {
   assert (ntab.empty ());
   std::vector<int> current_assumptions{assumptions};
   std::vector<std::vector<int>> cubes{{assumptions}};
-  auto loccs{lookahead_populate_locc ()};
+  auto loccs = lookahead_populate_locc ();
   LOG ("loccs populated\n");
   assert (ntab.empty ());
 
