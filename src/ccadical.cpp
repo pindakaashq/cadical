@@ -205,6 +205,12 @@ void ccadical_force_backtrack(CCaDiCaL *slv, size_t new_level) {
   return ((Wrapper *)slv)->solver->force_backtrack(new_level);
 }
 
+const CFixedAssignmentListener empty_fixed_listener = {
+	/* .data = */ nullptr,
+	/* .notify_fixed_assignment = */ nullptr,
+};
+
+
 void ccadical_freeze (CCaDiCaL *ptr, int lit) {
   ((Wrapper *) ptr)->solver->freeze (lit);
 }
