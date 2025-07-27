@@ -62,6 +62,17 @@ void ccadical_reset_observed_vars(CCaDiCaL *);
 bool ccadical_is_decision(CCaDiCaL *, int lit);
 void ccadical_force_backtrack(CCaDiCaL *, size_t new_level);
 
+struct _CFixedAssignmentListener {
+  void *data;
+  void (*notify_fixed_assignment)(void *data, int lit);
+};
+typedef struct _CFixedAssignmentListener CFixedAssignmentListener;
+
+extern const CFixedAssignmentListener empty_fixed_listener;
+
+void ccadical_connect_fixed_listener(CCaDiCaL *, CFixedAssignmentListener listener);
+void ccadical_disconnect_fixed_listener(CCaDiCaL *);
+
 /*------------------------------------------------------------------------*/
 
 // Non-IPASIR conformant 'C' functions.
