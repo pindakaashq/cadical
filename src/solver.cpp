@@ -1016,19 +1016,19 @@ void Solver::disconnect_learner () {
 /*===== IPASIR END =======================================================*/
 
 void Solver::connect_fixed_listener (
-    FixedAssignmentListener *fixed_listener) {
+    CFixedAssignmentListener fixed_listener) {
   LOG_API_CALL_BEGIN ("connect_fixed_listener");
   REQUIRE_VALID_STATE ();
-  REQUIRE (fixed_listener, "can not connect zero fixed listener");
+  REQUIRE (fixed_listener.notify_fixed_assignment, "can not connect zero fixed listener");
 
 #ifdef LOGGING
-  if (external->fixed_listener)
+  if (external->fixed_listener.notify_fixed_assignment)
     LOG ("connecting new listener of fixed assignments (disconnecting "
          "previous one)");
   else
     LOG ("connecting new listener of fixed assigments (no previous one)");
 #endif
-  if (external->fixed_listener)
+  if (external->fixed_listener.notify_fixed_assignment)
     disconnect_fixed_listener ();
   external->fixed_listener = fixed_listener;
   // Listeners are treated as real-time listeners, thus previously found
@@ -1042,13 +1042,13 @@ void Solver::disconnect_fixed_listener () {
   LOG_API_CALL_BEGIN ("disconnect_fixed_listener");
   REQUIRE_VALID_STATE ();
 #ifdef LOGGING
-  if (external->fixed_listener)
+  if (external->fixed_listener.notify_fixed_assignment)
     LOG ("disconnecting previous listener of fixed assignments");
   else
     LOG ("ignoring to disconnect listener of fixed assignments (no "
          "previous one)");
 #endif
-  external->fixed_listener = 0;
+  external->fixed_listener = empty_fixed_listener;
   LOG_API_CALL_END ("disconnect_fixed_listener");
 }
 

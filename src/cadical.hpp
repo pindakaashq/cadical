@@ -224,7 +224,7 @@ struct External;
 // Forward declaration of call-back classes. See bottom of this file.
 
 class Learner;
-class FixedAssignmentListener;
+// class FixedAssignmentListener;
 class Terminator;
 class ClauseIterator;
 class WitnessIterator;
@@ -396,7 +396,7 @@ public:
   //   require (VALID)
   //   ensure (VALID)
   //
-  void connect_fixed_listener (FixedAssignmentListener *fixed_listener);
+  void connect_fixed_listener (CFixedAssignmentListener fixed_listener);
   void disconnect_fixed_listener ();
 
   // ====== BEGIN IPASIR-UP ================================================
@@ -1266,12 +1266,12 @@ public:
 // is fixed (for example during inprocessing or due to derived unit
 // clauses).
 
-class FixedAssignmentListener {
-public:
-  virtual ~FixedAssignmentListener () {}
+// class FixedAssignmentListener {
+// public:
+//   virtual ~FixedAssignmentListener () {}
 
-  virtual void notify_fixed_assignment (int) = 0;
-};
+//   virtual void notify_fixed_assignment (int) = 0;
+// };
 
 /*------------------------------------------------------------------------*/
 

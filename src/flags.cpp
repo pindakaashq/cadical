@@ -3,12 +3,12 @@
 namespace CaDiCaL {
 
 void Internal::mark_fixed (int lit) {
-  if (external->fixed_listener) {
+  if (external->fixed_listener.notify_fixed_assignment) {
     int elit = externalize (lit);
     assert (elit);
     const int eidx = abs (elit);
     if (!external->ervars[eidx])
-      external->fixed_listener->notify_fixed_assignment (elit);
+      external->fixed_listener.notify_fixed_assignment (external->fixed_listener.data, elit);
   }
   Flags &f = flags (lit);
   assert (f.status == Flags::ACTIVE);
