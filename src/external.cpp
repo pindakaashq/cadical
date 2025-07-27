@@ -6,7 +6,7 @@ namespace CaDiCaL {
 
 External::External (Internal *i)
     : internal (i), max_var (0), vsize (0), extended (false),
-      concluded (false), terminator (0), learner (0), fixed_listener (0),
+      concluded (false), terminator (0), learner (0), fixed_listener (empty_fixed_listener),
       propagator (empty_propagator), solution (0), vars (max_var) {
   assert (internal);
   assert (!internal->external);

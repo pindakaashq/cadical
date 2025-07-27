@@ -100,7 +100,7 @@ struct External {
 
   // If there is a listener for fixed assignments.
 
-  FixedAssignmentListener *fixed_listener;
+  CFixedAssignmentListener fixed_listener;
 
   // If there is an external propagator.
 
