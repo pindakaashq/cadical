@@ -253,3 +253,11 @@ void ccadical_phase(CCaDiCaL *slv, int lit) {
 void ccadical_unphase(CCaDiCaL *slv, int lit) {
   ((Wrapper *)slv)->solver->unphase(lit);
 }
+
+void ccadical_connect_proof_tracer (CCaDiCaL *slv, CTracer tracer, bool antecedents, bool finalize_clauses) {
+	((Wrapper *)slv)->solver->connect_proof_tracer(tracer, antecedents, finalize_clauses);
+}
+
+bool ccadical_disconnect_proof_tracer (CCaDiCaL *slv, void* tracer_data) {
+	return ((Wrapper *)slv)->solver->disconnect_proof_tracer(tracer_data);
+}

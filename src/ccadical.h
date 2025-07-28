@@ -104,6 +104,30 @@ bool ccadical_is_observed(CCaDiCaL *, int lit);
 void ccadical_phase(CCaDiCaL *, int lit);
 void ccadical_unphase(CCaDiCaL *, int lit);
 
+struct _CTracer {
+	void* data;
+	void (*add_original_clause) (void*, uint64_t, bool, const int*, size_t, bool);
+	void (*add_derived_clause) (void*, uint64_t, bool, const int*, size_t, const uint64_t*, size_t);
+	void (*delete_clause) (void*, uint64_t, bool, const int*, size_t);
+	void (*weaken_minus) (void*, uint64_t, const int*, size_t);
+	void (*strengthen) (void*, uint64_t);
+	void (*report_status) (void*, int, uint64_t);
+	void (*finalize_clause) (void*, uint64_t, const int*, size_t);
+	void (*begin_proof) (void*, uint64_t);
+	void (*solve_query) (void*);
+	void (*add_assumption) (void*, int);
+	void (*add_constraint) (void*, const int*, size_t);
+	void (*reset_assumptions) (void*);
+	void (*add_assumption_clause) (void*, uint64_t, const int*, size_t, const uint64_t*, size_t);
+	void (*conclude_unsat) (void*, uint8_t, const uint64_t*, size_t);
+	void (*conclude_sat) (void*, const int*, size_t);
+	void (*conclude_unknown) (void*, const int*, size_t);
+};
+typedef struct _CTracer CTracer;
+
+void ccadical_connect_proof_tracer (CCaDiCaL *, CTracer tracer, bool antecedents, bool finalize_clauses);
+bool ccadical_disconnect_proof_tracer (CCaDiCaL *, void* tracer_data);
+
 /*------------------------------------------------------------------------*/
 
 // Support legacy names used before moving to more IPASIR conforming names.
