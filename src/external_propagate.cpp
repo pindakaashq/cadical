@@ -276,7 +276,7 @@ void Internal::renotify_full_trail () {
     notified = 0; // TODO: save the last notified root-level position
                   // somewhere and use it here
     if (notified_level)
-      notify_backtrack (0);
+      notify_backtrack (0, false);
   }
   std::vector<int> assigned;
 
@@ -1354,13 +1354,13 @@ void Internal::notify_decision () {
 //
 // Notify the external propagator that backtrack to new_level.
 //
-void Internal::notify_backtrack (size_t new_level) {
+void Internal::notify_backtrack (size_t new_level, bool restart) {
   if (!external_prop || external_prop_is_lazy || private_steps)
     return;
   assert ((size_t) notified_level > new_level);
   LOG_INTERACTION_FOR (notify_backtrack, (int) new_level);
   external->propagator.notify_backtrack (external->propagator.data,
-                                         new_level);
+                                         new_level, restart);
   LOG_INTERACTION_END_FOR (notify_backtrack, (int) new_level);
   notified_level = new_level;
 }

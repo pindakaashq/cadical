@@ -764,8 +764,9 @@ struct Internal {
   //
   void unassign (int lit);
   void update_target_and_best ();
-  void backtrack (int target_level = 0);
-  void backtrack_without_updating_phases (int target_level = 0);
+  void backtrack (int target_level = 0, bool restart = false);
+  void backtrack_without_updating_phases (int target_level = 0,
+                                          bool restart = false);
   void fix_trail_levels ();
 
   // Minimized learned clauses in 'minimize.cpp'.
@@ -825,7 +826,7 @@ struct Internal {
   void handle_external_clause (Clause *, int64_t new_id = 0);
   void notify_assignments ();
   void notify_decision ();
-  void notify_backtrack (size_t new_level);
+  void notify_backtrack (size_t new_level, bool restart);
   void force_backtrack (int new_level);
   int ask_decision ();
   bool ask_external_clause ();
