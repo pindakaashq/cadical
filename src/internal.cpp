@@ -961,7 +961,7 @@ int Internal::solve (bool preprocess_only) {
       assert (control.size () > 1);
       stats.literalsreused += num_assigned - control[1].trail;
     }
-    if (external->propagator)
+    if (external->propagator.data)
       renotify_trail_after_ilb ();
   }
   if (preprocess_only)
