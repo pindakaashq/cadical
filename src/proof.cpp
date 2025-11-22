@@ -6,6 +6,75 @@ using namespace std;
 
 /*------------------------------------------------------------------------*/
 
+// Wrapper functions for C++ implementations of `Tracer`
+
+void wrap_add_original_clause (void* t, int64_t id, bool redundant, const int* clause, size_t clause_size, bool restored) {
+	std::vector<int> clause_copy(clause, clause + clause_size);
+	((Tracer*) t)->add_original_clause(id, redundant, clause_copy, restored);
+}
+void wrap_add_derived_clause (void* t, int64_t id, bool redundant, int witness, const int* clause, size_t clause_size, const int64_t* antecedents, size_t antecedents_size) {
+	std::vector<int> clause_copy(clause, clause + clause_size);
+	const std::vector<int64_t> antecedents_copy(antecedents, antecedents + antecedents_size);
+	((Tracer*) t)->add_derived_clause(id, redundant, witness, clause_copy, antecedents_copy);
+}
+void wrap_delete_clause (void* t, int64_t id, bool redundant, const int* clause, size_t clause_size) {
+	std::vector<int> clause_copy(clause, clause + clause_size);
+	((Tracer*) t)->delete_clause(id, redundant, clause_copy);
+}
+void wrap_weaken_minus (void* t, int64_t id, const int* clause, size_t clause_size) {
+	 std::vector<int> clause_copy(clause, clause + clause_size);
+	((Tracer*) t)->weaken_minus(id, clause_copy);
+}
+void wrap_strengthen (void* t, int64_t id) {
+	((Tracer*) t)->strengthen(id);
+}
+void wrap_report_status (void* t, int status, int64_t id) {
+	((Tracer*) t)->report_status(status, id);
+}
+void wrap_finalize_clause (void* t, int64_t id, const int* clause, size_t clause_size) {
+	std::vector<int> clause_copy(clause, clause + clause_size);
+	((Tracer*) t)->finalize_clause(id, clause_copy);
+}
+void wrap_begin_proof (void* t, int64_t id) {
+	((Tracer*) t)->begin_proof(id);
+}
+void wrap_solve_query (void* t) {
+	((Tracer*) t)->solve_query();
+}
+void wrap_add_assumption (void* t, int lit) {
+	((Tracer*) t)->add_assumption(lit);
+}
+void wrap_add_constraint (void* t, const int* clause, size_t clause_size) {
+	std::vector<int> clause_copy(clause, clause + clause_size);
+	((Tracer*) t)->add_constraint(clause_copy);
+}
+void wrap_reset_assumptions (void* t) {
+	((Tracer*) t)->reset_assumptions();
+}
+void wrap_add_assumption_clause (void* t, int64_t id, const int* clause, size_t clause_size, const int64_t* antecedents, size_t antecedents_size) {
+	std::vector<int> clause_copy(clause, clause + clause_size);
+	std::vector<int64_t> antecedents_copy(antecedents, antecedents + antecedents_size);
+	((Tracer*) t)->add_assumption_clause(id, clause_copy, antecedents_copy);
+}
+void wrap_conclude_unsat (void* t, uint8_t conclusion_type, const int64_t* clause_ids, size_t clause_ids_size) {
+	std::vector<int64_t> clause_ids_copy(clause_ids, clause_ids + clause_ids_size);
+	((Tracer*) t)->conclude_unsat(conclusion_type == 1 ? CONFLICT : (conclusion_type == 2 ? ASSUMPTIONS : CONSTRAINT), clause_ids_copy);
+}
+void wrap_conclude_sat (void* t, const int* model, size_t model_size) {
+	std::vector<int> model_copy(model, model + model_size);
+	((Tracer*) t)->conclude_sat(model_copy);
+}
+void wrap_conclude_unknown (void* t, const int* trail, size_t trail_size) {
+	std::vector<int> trail_copy(trail, trail + trail_size);
+	((Tracer*) t)->conclude_unknown(trail_copy);
+}
+void wrap_demote_clause (void* t, int64_t clause_id, const int* clause, size_t clause_len) {
+	std::vector<int> clause_copy(clause, clause + clause_len);
+	((Tracer*) t)->demote_clause(clause_id, clause_copy);
+}
+
+/*------------------------------------------------------------------------*/
+
 // Enable proof logging and checking by allocating a 'Proof' object.
 
 void Internal::new_proof_on_demand () {
@@ -79,6 +148,17 @@ void Internal::connect_proof_tracer (FileTracer *tracer, bool antecedents,
   file_tracers.push_back (tracer);
 }
 
+void Internal::connect_proof_tracer (CTracer tracer, bool antecedents,
+                                     bool finalize_clauses) {
+  new_proof_on_demand ();
+  if (antecedents)
+    force_lrat ();
+  if (finalize_clauses)
+    frat = true;
+  resize_unit_clauses_idx ();
+  proof->connect (tracer);
+}
+
 bool Internal::disconnect_proof_tracer (Tracer *tracer) {
   auto it = std::find (tracers.begin (), tracers.end (), tracer);
   if (it != tracers.end ()) {
@@ -112,9 +192,42 @@ bool Internal::disconnect_proof_tracer (FileTracer *tracer) {
   return false;
 }
 
+bool Internal::disconnect_proof_tracer (void* tracer_data) {
+  return proof->disconnect (tracer_data);
+}
+
+void Proof::connect (Tracer *t) {
+	tracers.push_back(CTracer {
+		(void*) t,
+		wrap_add_original_clause,
+		wrap_add_derived_clause,
+		wrap_delete_clause,
+		wrap_weaken_minus,
+		wrap_strengthen,
+		wrap_report_status,
+		wrap_finalize_clause,
+		wrap_begin_proof,
+		wrap_solve_query,
+		wrap_add_assumption,
+		wrap_add_constraint,
+		wrap_reset_assumptions,
+		wrap_add_assumption_clause,
+		wrap_conclude_unsat,
+		wrap_conclude_sat,
+		wrap_conclude_unknown,
+		wrap_demote_clause,
+	});
+}
+
 void Proof::disconnect (Tracer *t) {
-  tracers.erase (std::remove (tracers.begin (), tracers.end (), t),
+	disconnect((void*) t);
+}
+
+bool Proof::disconnect (void *tracer_data) {
+	const auto size = tracers.size();
+  tracers.erase (std::remove_if (tracers.begin (), tracers.end (), [&](CTracer& t){ return t.data == tracer_data; }),
                  tracers.end ());
+  return size > tracers.size();
 }
 
 // Enable proof tracing.
@@ -547,7 +660,7 @@ void Proof::add_original_clause (bool restore) {
   assert (clause_id);
 
   for (auto &tracer : tracers) {
-    tracer->add_original_clause (clause_id, false, clause, restore);
+    tracer.add_original_clause (tracer.data, clause_id, false, clause.data(), clause.size(), restore);
   }
   clause.clear ();
   clause_id = 0;
@@ -558,8 +671,7 @@ void Proof::add_derived_clause () {
        redundant);
   assert (clause_id);
   for (auto &tracer : tracers) {
-    tracer->add_derived_clause (clause_id, redundant, witness, clause,
-                                proof_chain);
+    tracer.add_derived_clause (tracer.data, clause_id, redundant, witness, clause.data(), clause.size(), proof_chain.data(), proof_chain.size());
   }
   proof_chain.clear ();
   clause.clear ();
@@ -570,7 +682,7 @@ void Proof::add_derived_clause () {
 void Proof::delete_clause () {
   LOG (clause, "PROOF deleting external clause");
   for (auto &tracer : tracers) {
-    tracer->delete_clause (clause_id, redundant, clause);
+    tracer.delete_clause (tracer.data, clause_id, redundant, clause.data(), clause.size());
   }
   clause.clear ();
   clause_id = 0;
@@ -580,7 +692,7 @@ void Proof::demote_clause () {
   LOG (clause, "PROOF demoting external clause");
   assert (!redundant);
   for (auto &tracer : tracers) {
-    tracer->demote_clause (clause_id, clause);
+    tracer.demote_clause (tracer.data, clause_id, clause.data(), clause.size());
   }
   clause.clear ();
   clause_id = 0;
@@ -589,7 +701,7 @@ void Proof::demote_clause () {
 void Proof::weaken_minus () {
   LOG (clause, "PROOF marking as clause to restore");
   for (auto &tracer : tracers) {
-    tracer->weaken_minus (clause_id, clause);
+    tracer.weaken_minus (tracer.data, clause_id, clause.data(), clause.size());
   }
   clause.clear ();
   clause_id = 0;
@@ -598,14 +710,14 @@ void Proof::weaken_minus () {
 void Proof::strengthen () {
   LOG ("PROOF strengthen clause with id %" PRId64, clause_id);
   for (auto &tracer : tracers) {
-    tracer->strengthen (clause_id);
+    tracer.strengthen (tracer.data, clause_id);
   }
   clause_id = 0;
 }
 
 void Proof::finalize_clause () {
   for (auto &tracer : tracers) {
-    tracer->finalize_clause (clause_id, clause);
+    tracer.finalize_clause (tracer.data, clause_id, clause.data(), clause.size());
   }
   clause.clear ();
   clause_id = 0;
@@ -614,7 +726,7 @@ void Proof::finalize_clause () {
 void Proof::add_assumption_clause () {
   LOG (clause, "PROOF adding assumption clause");
   for (auto &tracer : tracers) {
-    tracer->add_assumption_clause (clause_id, clause, proof_chain);
+    tracer.add_assumption_clause (tracer.data, clause_id, clause.data(), clause.size(), proof_chain.data(), proof_chain.size());
   }
   proof_chain.clear ();
   clause.clear ();
@@ -625,7 +737,7 @@ void Proof::add_assumption () {
   LOG (clause, "PROOF adding assumption");
   assert (clause.size () == 1);
   for (auto &tracer : tracers) {
-    tracer->add_assumption (clause.back ());
+    tracer.add_assumption (tracer.data, clause.back ());
   }
   clause.clear ();
 }
@@ -633,7 +745,7 @@ void Proof::add_assumption () {
 void Proof::add_constraint () {
   LOG (clause, "PROOF adding constraint");
   for (auto &tracer : tracers) {
-    tracer->add_constraint (clause);
+    tracer.add_constraint (tracer.data, clause.data(), clause.size());
   }
   clause.clear ();
 }
@@ -641,28 +753,28 @@ void Proof::add_constraint () {
 void Proof::reset_assumptions () {
   LOG ("PROOF reset assumptions");
   for (auto &tracer : tracers) {
-    tracer->reset_assumptions ();
+    tracer.reset_assumptions (tracer.data);
   }
 }
 
 void Proof::report_status (int status, int64_t id) {
   LOG ("PROOF reporting status %d", status);
   for (auto &tracer : tracers) {
-    tracer->report_status (status, id);
+    tracer.report_status (tracer.data, status, id);
   }
 }
 
 void Proof::begin_proof (int64_t id) {
   LOG (clause, "PROOF begin proof");
   for (auto &tracer : tracers) {
-    tracer->begin_proof (id);
+    tracer.begin_proof (tracer.data, id);
   }
 }
 
 void Proof::solve_query () {
   LOG (clause, "PROOF solve query");
   for (auto &tracer : tracers) {
-    tracer->solve_query ();
+    tracer.solve_query (tracer.data);
   }
 }
 
@@ -670,21 +782,21 @@ void Proof::conclude_unsat (ConclusionType con,
                             const vector<int64_t> &conclusion) {
   LOG (clause, "PROOF conclude unsat");
   for (auto &tracer : tracers) {
-    tracer->conclude_unsat (con, conclusion);
+    tracer.conclude_unsat (tracer.data, (uint8_t) con, conclusion.data(), conclusion.size());
   }
 }
 
 void Proof::conclude_sat (const vector<int> &model) {
   LOG (clause, "PROOF conclude sat");
   for (auto &tracer : tracers) {
-    tracer->conclude_sat (model);
+    tracer.conclude_sat (tracer.data, model.data(), model.size());
   }
 }
 
 void Proof::conclude_unknown (const vector<int> &trail) {
   LOG (clause, "PROOF conclude unknown");
   for (auto &tracer : tracers) {
-    tracer->conclude_unknown (trail);
+    tracer.conclude_unknown (tracer.data, trail.data(), trail.size());
   }
 }
 

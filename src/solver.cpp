@@ -1269,6 +1269,17 @@ void Solver::connect_proof_tracer (FileTracer *tracer, bool antecedents,
   LOG_API_CALL_END ("connect proof tracer with file");
 }
 
+void Solver::connect_proof_tracer (CTracer tracer, bool antecedents,
+                                   bool finalize_clauses) {
+  LOG_API_CALL_BEGIN ("connect proof tracer with file");
+  REQUIRE_VALID_STATE ();
+  REQUIRE (state () == CONFIGURING,
+           "can only start proof tracing right after initialization");
+  REQUIRE (tracer.data, "can not connect zero tracer");
+  internal->connect_proof_tracer (tracer, antecedents, finalize_clauses);
+  LOG_API_CALL_END ("connect proof tracer with file");
+}
+
 bool Solver::disconnect_proof_tracer (Tracer *tracer) {
   LOG_API_CALL_BEGIN ("disconnect proof tracer");
   REQUIRE_VALID_STATE ();
@@ -1292,6 +1303,15 @@ bool Solver::disconnect_proof_tracer (FileTracer *tracer) {
   REQUIRE_VALID_STATE ();
   REQUIRE (tracer, "can not disconnect zero tracer");
   bool res = internal->disconnect_proof_tracer (tracer);
+  LOG_API_CALL_RETURNS ("disconnect proof tracer", res);
+  return res;
+}
+
+bool Solver::disconnect_proof_tracer (void* tracer_data) {
+  LOG_API_CALL_BEGIN ("disconnect proof tracer");
+  REQUIRE_VALID_STATE ();
+  REQUIRE (tracer_data, "can not disconnect zero tracer");
+  bool res = internal->disconnect_proof_tracer (tracer_data);
   LOG_API_CALL_RETURNS ("disconnect proof tracer", res);
   return res;
 }

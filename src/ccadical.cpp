@@ -265,3 +265,11 @@ CCaDiCaL *ccadical_copy(CCaDiCaL *slv) {
 bool ccadical_is_observed(CCaDiCaL *slv, int lit){
 	return ((Wrapper *)slv)->solver->is_observed(lit);
 }
+
+void ccadical_connect_proof_tracer (CCaDiCaL *slv, CTracer tracer, bool antecedents, bool finalize_clauses) {
+	((Wrapper *)slv)->solver->connect_proof_tracer(tracer, antecedents, finalize_clauses);
+}
+
+bool ccadical_disconnect_proof_tracer (CCaDiCaL *slv, void* tracer_data) {
+	return ((Wrapper *)slv)->solver->disconnect_proof_tracer(tracer_data);
+}

@@ -943,6 +943,8 @@ public:
                              bool finalize_clauses = false);
   void connect_proof_tracer (FileTracer *tracer, bool antecedents,
                              bool finalize_clauses = false);
+  void connect_proof_tracer (CTracer tracer, bool antecedents,
+                             bool finalize_clauses = false);
 
   // Triggers the conclusion of incremental proofs.  If the solver is
   // 'SATISFIED' it will trigger 'extend ()' and give the model to the proof
@@ -969,6 +971,7 @@ public:
   bool disconnect_proof_tracer (Tracer *tracer);
   bool disconnect_proof_tracer (StatTracer *tracer);
   bool disconnect_proof_tracer (FileTracer *tracer);
+  bool disconnect_proof_tracer (void* tracer_data);
 
   //------------------------------------------------------------------------
 

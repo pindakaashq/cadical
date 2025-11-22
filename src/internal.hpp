@@ -1696,9 +1696,12 @@ struct Internal {
                              bool finalize_clauses = false);
   void connect_proof_tracer (FileTracer *tracer, bool antecedents,
                              bool finalize_clauses = false);
+  void connect_proof_tracer (CTracer tracer, bool antecedents,
+                             bool finalize_clauses = false);
   bool disconnect_proof_tracer (Tracer *tracer);
   bool disconnect_proof_tracer (StatTracer *tracer);
   bool disconnect_proof_tracer (FileTracer *tracer);
+  bool disconnect_proof_tracer (void *tracer_data);
   void conclude_unsat ();
   void reset_concluded ();
 
