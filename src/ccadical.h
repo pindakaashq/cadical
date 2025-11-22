@@ -60,6 +60,12 @@ void ccadical_unphase (CCaDiCaL *wrapper, int lit);
 
 /*------------------------------------------------------------------------*/
 
+// [PATCH] Additional C bindings for C++ Cadical
+
+CCaDiCaL *ccadical_copy(CCaDiCaL *slv);
+
+/*------------------------------------------------------------------------*/
+
 // Support legacy names used before moving to more IPASIR conforming names.
 
 #define ccadical_reset ccadical_release
