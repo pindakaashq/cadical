@@ -1,6 +1,7 @@
 #ifndef _proof_h_INCLUDED
 #define _proof_h_INCLUDED
 
+#include "ccadical.h"
 #include "tracer.hpp"
 #include <stdint.h>
 
@@ -29,7 +30,7 @@ class Proof {
   int witness;
 
   // the 'tracers'
-  std::vector<Tracer *> tracers;          // tracers (ie checker)
+  std::vector<CTracer> tracers;          // tracers (ie checker)
   std::vector<FileTracer *> file_tracers; // file tracers (ie LRAT tracer)
 
   void add_literal (int internal_lit); // add to 'clause'
@@ -53,8 +54,10 @@ public:
   Proof (Internal *);
   ~Proof ();
 
-  void connect (Tracer *t) { tracers.push_back (t); }
+  void connect (Tracer *t);
+  void connect (CTracer t) { tracers.push_back (t); }
   void disconnect (Tracer *t);
+  bool disconnect (void *tracer_data);
   // Add original clauses to the proof (for online proof checking).
   //
   void add_original_clause (int64_t, bool, const std::vector<int> &);
