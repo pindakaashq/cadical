@@ -31,9 +31,9 @@ static inline void *kitten_calloc (size_t n, size_t size) {
   return res;
 }
 
-#define CALLOC(P, N) \
+#define CALLOC(P, N, T) \
   do { \
-    (P) = kitten_calloc (N, sizeof *(P)); \
+    (P) = ( T *) kitten_calloc (N, sizeof (T)); \
   } while (0)
 #define DEALLOC(P, N) free (P)
 
@@ -46,7 +46,7 @@ static inline void *kitten_calloc (size_t n, size_t size) {
     const size_t OLD_CAPACITY = CAPACITY_STACK (S); \
     const size_t NEW_CAPACITY = OLD_CAPACITY ? 2 * OLD_CAPACITY : 1; \
     const size_t BYTES = NEW_CAPACITY * sizeof *(S).begin; \
-    (S).begin = realloc ((S).begin, BYTES); \
+    (S).begin = (unsigned int*) realloc ((S).begin, BYTES); \
     if (!(S).begin) \
       die ("out of memory reallocating '%zu' bytes", BYTES); \
     (S).allocated = (S).begin + NEW_CAPACITY; \
@@ -57,19 +57,19 @@ static inline void *kitten_calloc (size_t n, size_t size) {
 
 #define INC(NAME) \
   do { \
-    statistics *statistics = &kitten->statistics; \
-    assert (statistics->NAME < UINT64_MAX); \
-    statistics->NAME++; \
+    statistics *stats = &kitten->stats; \
+    assert (stats->NAME < UINT64_MAX); \
+    stats->NAME++; \
   } while (0)
 
 #define ADD(NAME, DELTA) \
   do { \
-    statistics *statistics = &kitten->statistics; \
-    assert (statistics->NAME <= UINT64_MAX - (DELTA)); \
-    statistics->NAME += (DELTA); \
+    statistics *stats = &kitten->stats; \
+    assert (stats->NAME <= UINT64_MAX - (DELTA)); \
+    stats->NAME += (DELTA); \
   } while (0)
 
-#define KITTEN_TICKS (kitten->statistics.kitten_ticks)
+#define KITTEN_TICKS (kitten->stats.kitten_ticks)
 
 #define INVALID UINT_MAX
 #define MAX_VARS ((1u << 31) - 1)
@@ -178,7 +178,7 @@ struct kitten {
   unsigneds core;
   unsigneds rcore;
   unsigneds eclause;
-  unsigneds export;
+  unsigneds export_;
   unsigneds klause;
   unsigneds klauses;
   unsigneds resolved;
@@ -191,7 +191,7 @@ struct kitten {
   void *terminator_data;
   unsigneds clause;
   uint64_t initialized;
-  statistics statistics;
+  statistics stats;
 };
 
 /*------------------------------------------------------------------------*/
@@ -484,34 +484,34 @@ static void initialize_kitten (kitten *kitten) {
 static void clear_kitten (kitten *kitten) {
   size_t bytes = (char *) &kitten->size - (char *) &kitten->status;
   memset (&kitten->status, 0, bytes);
-  memset (&kitten->statistics, 0, sizeof (statistics));
+  memset (&kitten->stats, 0, sizeof (statistics));
   initialize_kitten (kitten);
 }
 
-#define RESIZE1(P) \
+#define RESIZE1(P, T) \
   do { \
     void *OLD_PTR = (P); \
-    CALLOC ((P), new_size / 2); \
+    CALLOC ((P), new_size / 2, T); \
     const size_t BYTES = old_vars * sizeof *(P); \
     if ((P) && OLD_PTR) /* nullptr not allowed */ \
       memcpy ((P), OLD_PTR, BYTES); \
     void *NEW_PTR = (P); \
-    (P) = OLD_PTR; \
+    (P) = (T*) OLD_PTR; \
     DEALLOC ((P), old_size / 2); \
-    (P) = NEW_PTR; \
+    (P) = (T*) NEW_PTR; \
   } while (0)
 
-#define RESIZE2(P) \
+#define RESIZE2(P, T) \
   do { \
     void *OLD_PTR = (P); \
-    CALLOC ((P), new_size); \
+    CALLOC ((P), new_size, T); \
     const size_t BYTES = old_lits * sizeof *(P); \
     if ((P) && OLD_PTR) /* nullptr not allowed */ \
       memcpy ((P), OLD_PTR, BYTES); \
     void *NEW_PTR = (P); \
-    (P) = OLD_PTR; \
+    (P) = (T*) OLD_PTR; \
     DEALLOC ((P), old_size); \
-    (P) = NEW_PTR; \
+    (P) = (T*) NEW_PTR; \
   } while (0)
 
 static void enlarge_internal (kitten *kitten, size_t lit) {
@@ -531,13 +531,13 @@ static void enlarge_internal (kitten *kitten, size_t lit) {
     LOG ("internal literals resized to %zu from %zu (requested %zu)",
          new_size, old_size, new_lits);
 
-    RESIZE1 (kitten->marks);
-    RESIZE1 (kitten->phases);
-    RESIZE2 (kitten->values);
-    RESIZE2 (kitten->failed);
-    RESIZE1 (kitten->vars);
-    RESIZE1 (kitten->links);
-    RESIZE2 (kitten->watches);
+    RESIZE1 (kitten->marks, value);
+    RESIZE1 (kitten->phases, unsigned char);
+    RESIZE2 (kitten->values, value);
+    RESIZE2 (kitten->failed, bool);
+    RESIZE1 (kitten->vars, kar);
+    RESIZE1 (kitten->links, kink);
+    RESIZE2 (kitten->watches, katches);
 
     kitten->size = new_size;
   }
@@ -602,10 +602,10 @@ static void invalid_api_usage (const char *fun, const char *fmt, ...) {
   } while (0)
 
 kitten *kitten_init (void) {
-  kitten *kitten;
-  CALLOC (kitten, 1);
-  initialize_kitten (kitten);
-  return kitten;
+  kitten *kit;
+  CALLOC (kit, 1, kitten);
+  initialize_kitten (kit);
+  return kit;
 }
 
 #ifdef LOGGING
@@ -820,7 +820,7 @@ static void new_original_klause (kitten *kitten, unsigned id) {
     PUSH_STACK (*klauses, lit);
   connect_new_klause (kitten, res);
   kitten->end_original_ref = SIZE_STACK (*klauses);
-  kitten->statistics.original++;
+  kitten->stats.original++;
 }
 
 static void enlarge_external (kitten *kitten, size_t eidx) {
@@ -835,7 +835,7 @@ static void enlarge_external (kitten *kitten, size_t eidx) {
     LOG ("external resizing to %zu variables from %zu (requested %u)",
          new_size, old_size, new_evars);
     unsigned *old_import = kitten->import;
-    CALLOC (kitten->import, new_size);
+    CALLOC (kitten->import, new_size, unsigned);
     const size_t bytes = old_evars * sizeof *kitten->import;
     if (kitten->import && old_import)
       memcpy (kitten->import, old_import, bytes);
@@ -853,8 +853,8 @@ static unsigned import_literal (kitten *kitten, unsigned elit) {
 
   unsigned iidx = kitten->import[eidx];
   if (!iidx) {
-    iidx = SIZE_STACK (kitten->export);
-    PUSH_STACK (kitten->export, eidx);
+    iidx = SIZE_STACK (kitten->export_);
+    PUSH_STACK (kitten->export_, eidx);
     kitten->import[eidx] = iidx + 1;
   } else
     iidx--;
@@ -867,8 +867,8 @@ static unsigned import_literal (kitten *kitten, unsigned elit) {
 
 static unsigned export_literal (kitten *kitten, unsigned ilit) {
   const unsigned iidx = ilit / 2;
-  assert (iidx < SIZE_STACK (kitten->export));
-  const unsigned eidx = PEEK_STACK (kitten->export, iidx);
+  assert (iidx < SIZE_STACK (kitten->export_));
+  const unsigned eidx = PEEK_STACK (kitten->export_, iidx);
   const unsigned elit = 2 * eidx + (ilit & 1);
   return elit;
 }
@@ -891,7 +891,7 @@ unsigned new_learned_klause (kitten *kitten) {
       PUSH_STACK (*klauses, ref);
   connect_new_klause (kitten, res);
   kitten->learned = true;
-  kitten->statistics.learned++;
+  kitten->stats.learned++;
   return res;
 }
 
@@ -915,8 +915,8 @@ void kitten_clear (kitten *kitten) {
   for (all_kits (kit))
     CLEAR_STACK (KATCHES (kit));
 
-  while (!EMPTY_STACK (kitten->export))
-    kitten->import[POP_STACK (kitten->export)] = 0;
+  while (!EMPTY_STACK (kitten->export_))
+    kitten->import[POP_STACK (kitten->export_)] = 0;
 
   const size_t lits = kitten->size;
   const unsigned vars = lits / 2;
@@ -943,7 +943,7 @@ void kitten_release (kitten *kitten) {
   RELEASE_STACK (kitten->assumptions);
   RELEASE_STACK (kitten->core);
   RELEASE_STACK (kitten->eclause);
-  RELEASE_STACK (kitten->export);
+  RELEASE_STACK (kitten->export_);
   RELEASE_STACK (kitten->klause);
   RELEASE_STACK (kitten->klauses);
   RELEASE_STACK (kitten->resolved);
@@ -1924,6 +1924,8 @@ unsigned kitten_compute_clausal_core (kitten *kitten,
 
   unsigned reason_ref = kitten->inconsistent;
 
+  unsigneds *core = NULL;
+
   if (reason_ref == INVALID) {
     assert (!EMPTY_STACK (kitten->assumptions));
     reason_ref = kitten->failing;
@@ -1934,7 +1936,7 @@ unsigned kitten_compute_clausal_core (kitten *kitten,
   }
 
   PUSH_STACK (*resolved, reason_ref);
-  unsigneds *core = &kitten->core;
+  core = &kitten->core;
   assert (EMPTY_STACK (*core));
 
   while (!EMPTY_STACK (*resolved)) {
@@ -1974,8 +1976,8 @@ DONE:
 
   LOG ("clausal core of %u original clauses", original);
   LOG ("clausal core of %" PRIu64 " learned clauses", learned);
-  kitten->statistics.original = original;
-  kitten->statistics.learned = 0;
+  kitten->stats.original = original;
+  kitten->stats.learned = 0;
   UPDATE_STATUS (21);
 
   return original;
