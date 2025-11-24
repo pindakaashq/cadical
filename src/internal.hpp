@@ -19,7 +19,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <variant>
 
 // Less common 'C' header.
 
