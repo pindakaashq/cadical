@@ -1,5 +1,9 @@
 #include "internal.hpp"
 
+#ifdef _MSC_VER
+#define __builtin_unreachable() __assume(0)
+#endif
+
 namespace CaDiCaL {
 
 // This function determines the next decision variable on the queue, without

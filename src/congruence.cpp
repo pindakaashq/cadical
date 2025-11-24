@@ -7,6 +7,10 @@
 #include <utility>
 #include <vector>
 
+#ifdef _MSC_VER
+#define __builtin_unreachable() __assume(0)
+#endif
+
 namespace CaDiCaL {
 
 Closure::Closure (Internal *i)
