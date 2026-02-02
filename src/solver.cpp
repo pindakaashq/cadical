@@ -1,4 +1,5 @@
 #include "cadical.hpp"
+#include "ccadical.h"
 #include "internal.hpp"
 #include <atomic>
 
@@ -907,7 +908,7 @@ bool Solver::flip (int lit) {
   REQUIRE_VALID_STATE ();
   REQUIRE_VALID_LIT (lit);
   REQUIRE (state () == SATISFIED, "can only flip value in satisfied state");
-  REQUIRE (!external->propagator,
+  REQUIRE (!external->propagator.data,
            "can only flip when no external propagator is present");
   bool res = external->flip (lit);
   LOG_API_CALL_RETURNS ("flip", lit, res);
@@ -920,7 +921,7 @@ bool Solver::flippable (int lit) {
   REQUIRE_VALID_STATE ();
   REQUIRE_VALID_LIT (lit);
   REQUIRE (state () == SATISFIED, "can only flip value in satisfied state");
-  REQUIRE (!external->propagator,
+  REQUIRE (!external->propagator.data,
            "can only flip when no external propagator is present");
   bool res = external->flippable (lit);
   LOG_API_CALL_RETURNS ("flippable", lit, res);
@@ -1082,31 +1083,31 @@ void Solver::disconnect_fixed_listener () {
 
 /*===== IPASIR-UP BEGIN ==================================================*/
 
-void Solver::connect_external_propagator (ExternalPropagator *propagator) {
+void Solver::connect_external_propagator (CExternalPropagator propagator) {
   LOG_API_CALL_BEGIN ("connect_external_propagator");
   REQUIRE_VALID_STATE ();
-  REQUIRE (propagator, "can not connect zero propagator");
-  REQUIRE (!external->propagator,
+  REQUIRE (propagator.data, "can not connect zero propagator");
+  REQUIRE (!external->propagator.data,
            "can not connect more than one propagator");
 
-  if (external->propagator)
+  if (external->propagator.data)
     disconnect_external_propagator ();
 
   external->propagator = propagator;
   internal->connect_propagator ();
   internal->external_prop = true;
-  internal->external_prop_is_lazy = propagator->is_lazy;
+  internal->external_prop_is_lazy = propagator.is_lazy;
   LOG_API_CALL_END ("connect_external_propagator");
 }
 
 void Solver::disconnect_external_propagator () {
   LOG_API_CALL_BEGIN ("disconnect_external_propagator");
   REQUIRE_VALID_STATE ();
-  REQUIRE (external->propagator,
+  REQUIRE (external->propagator.data,
            "can not disconnect propagator without a connected propagator");
   external->reset_observed_vars ();
 
-  external->propagator = 0;
+  external->propagator = empty_propagator;
   internal->set_changed_val ();
   internal->external_prop = false;
   internal->external_prop_is_lazy = true;
@@ -1118,7 +1119,7 @@ void Solver::add_observed_var (int idx) {
   TRACE ("observe", idx);
   REQUIRE_VALID_OR_SOLVING_STATE ();
   REQUIRE_VALID_LIT (idx);
-  REQUIRE (external->propagator,
+  REQUIRE (external->propagator.data,
            "can not observe variables without a connected propagator");
   external->add_observed_var (idx);
   LOG_API_CALL_END ("observe", idx);
@@ -1128,7 +1129,7 @@ void Solver::remove_observed_var (int idx) {
   TRACE ("unobserve", idx);
   REQUIRE_VALID_OR_SOLVING_STATE ();
   REQUIRE_VALID_LIT (idx);
-  REQUIRE (external->propagator,
+  REQUIRE (external->propagator.data,
            "can not unobserve variables without a connected propagator");
   external->remove_observed_var (idx);
   LOG_API_CALL_END ("unobserve", idx);
@@ -1138,7 +1139,7 @@ void Solver::reset_observed_vars () {
   TRACE ("reset_observed_vars");
   REQUIRE_VALID_OR_SOLVING_STATE ();
   REQUIRE (
-      external->propagator,
+      external->propagator.data,
       "can not reset observed variables without a connected propagator");
   external->reset_observed_vars ();
   LOG_API_CALL_END ("reset_observed_vars");
@@ -1541,8 +1542,8 @@ void Solver::dump_cnf () {
 
 /*------------------------------------------------------------------------*/
 
-ExternalPropagator *Solver::get_propagator () {
-  return external->propagator;
+CExternalPropagator *Solver::get_propagator () {
+  return (external->propagator.data == nullptr) ? nullptr : &external->propagator;
 }
 
 bool Solver::observed (int lit) {
@@ -1575,7 +1576,7 @@ bool Solver::is_decision (int lit) {
 void Solver::force_backtrack (int new_level) {
   TRACE ("force_backtrack", new_level);
   REQUIRE_VALID_OR_SOLVING_STATE ();
-  REQUIRE (external->propagator,
+  REQUIRE (external->propagator.data,
            "can not force backtrack without a connected propagator");
   external->force_backtrack (new_level);
 }

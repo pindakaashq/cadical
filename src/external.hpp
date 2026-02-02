@@ -107,7 +107,7 @@ struct External {
 
   // If there is an external propagator.
 
-  ExternalPropagator *propagator;
+  CExternalPropagator propagator;
 
   vector<bool> is_observed; // Quick flag for each external variable
 
