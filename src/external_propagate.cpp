@@ -219,14 +219,16 @@ void Internal::renotify_full_trail_between_trail_pos (
   if (start_new_level) {
     if (assigned.size ()) {
       LOG_INTERACTION_FOR (notify_assignment_batch, (int) assigned.size ());
-      external->propagator->notify_assignment (assigned);
+      external->propagator.notify_assignment (
+          external->propagator.data, assigned.data (), assigned.size ());
       LOG_INTERACTION_END_FOR (notify_assignment_batch,
                                (int) assigned.size ());
     }
     assigned.clear ();
     notified_level++;
     LOG_INTERACTION_FOR (notify_new_decision_level, notified_level);
-    external->propagator->notify_new_decision_level ();
+    external->propagator.notify_new_decision_level (
+        external->propagator.data);
     LOG_INTERACTION_END_FOR (notify_new_decision_level, notified_level);
   }
   for (; j < end_level; ++j) {
@@ -254,7 +256,8 @@ void Internal::renotify_full_trail_between_trail_pos (
 
   if (assigned.size ()) {
     LOG_INTERACTION_FOR (notify_assignment_batch, (int) assigned.size ());
-    external->propagator->notify_assignment (assigned);
+    external->propagator.notify_assignment (
+        external->propagator.data, assigned.data (), assigned.size ());
     LOG_INTERACTION_END_FOR (notify_assignment_batch,
                              (int) assigned.size ());
   }
@@ -380,7 +383,7 @@ bool Internal::external_propagate () {
     notify_assignments ();
 
     LOG_INTERACTION_START (cb_propagate);
-    int elit = external->propagator->cb_propagate ();
+    int elit = external->propagator.propagate (external->propagator.data);
     LOG_INTERACTION_RETURN (cb_propagate, elit);
 
     CB_REQUIRE (
@@ -445,7 +448,7 @@ bool Internal::external_propagate () {
         }
       } // else (tmp > 0) -> the case of a satisfied literal is ignored
       LOG_INTERACTION_START (cb_propagate);
-      elit = external->propagator->cb_propagate ();
+      elit = external->propagator.propagate (external->propagator.data);
       LOG_INTERACTION_RETURN (cb_propagate, elit);
       stats.ext_prop.ext_cb++;
       stats.ext_prop.eprop_call++;
@@ -531,8 +534,8 @@ bool Internal::external_propagate () {
 bool Internal::ask_external_clause () {
   ext_clause_forgettable = false;
   LOG_INTERACTION_START (cb_has_external_clause);
-  bool res =
-      external->propagator->cb_has_external_clause (ext_clause_forgettable);
+  bool res = external->propagator.has_external_clause (
+      external->propagator.data, &ext_clause_forgettable);
   LOG_INTERACTION_RETURN_TWO (cb_has_external_clause, res,
                               ext_clause_forgettable);
 
@@ -640,12 +643,13 @@ void Internal::add_external_clause (int propagated_elit,
     // irredundant. In case they would be unforgettably important, the
     // propagator can add them as an explicit unforgettable external clause
     // or set 'are_reasons_forgettable' to false.
-    ext_clause_forgettable = external->propagator->are_reasons_forgettable;
+    ext_clause_forgettable = external->propagator.are_reasons_forgettable;
 #ifndef NDEBUG
     LOG ("add external reason of propagated lit: %d", propagated_elit);
 #endif
     LOG_INTERACTION_FOR (cb_add_reason_clause_lit, propagated_elit);
-    elit = external->propagator->cb_add_reason_clause_lit (propagated_elit);
+    elit = external->propagator.add_reason_clause_lit (
+        external->propagator.data, propagated_elit);
     LOG_INTERACTION_RETURN_FOR (cb_add_reason_clause_lit, propagated_elit,
                                 elit);
     if (elit == propagated_elit)
@@ -658,7 +662,8 @@ void Internal::add_external_clause (int propagated_elit,
                 "reason clause must contain only observed variables.");
   } else {
     LOG_INTERACTION_START (cb_add_external_clause_lit);
-    elit = external->propagator->cb_add_external_clause_lit ();
+    elit = external->propagator.add_external_clause_lit (
+        external->propagator.data);
     LOG_INTERACTION_RETURN (cb_add_external_clause_lit, elit);
 
     CB_REQUIRE (!elit ||
@@ -687,8 +692,8 @@ void Internal::add_external_clause (int propagated_elit,
     external->add (elit);
     if (propagated_elit) {
       LOG_INTERACTION_FOR (cb_add_reason_clause_lit, propagated_elit);
-      elit =
-          external->propagator->cb_add_reason_clause_lit (propagated_elit);
+      elit = external->propagator.add_reason_clause_lit (
+          external->propagator.data, propagated_elit);
       LOG_INTERACTION_RETURN_FOR (cb_add_reason_clause_lit, propagated_elit,
                                   elit);
       if (elit == propagated_elit)
@@ -700,7 +705,8 @@ void Internal::add_external_clause (int propagated_elit,
           "reason clause must contain only observed variables.");
     } else {
       LOG_INTERACTION_START (cb_add_external_clause_lit);
-      elit = external->propagator->cb_add_external_clause_lit ();
+      elit = external->propagator.add_external_clause_lit (
+          external->propagator.data);
       LOG_INTERACTION_RETURN (cb_add_external_clause_lit, elit);
       CB_REQUIRE (
           !elit || ((size_t) abs (elit) < external->is_observed.size () &&
@@ -871,8 +877,8 @@ void Internal::explain_external_propagations () {
 Clause *Internal::learn_external_reason_clause (int ilit,
                                                 int falsified_elit,
                                                 bool no_backtrack) {
-  assert (external->propagator); // REQ is defined by not allowing
-                                 // unobserving during conflict
+  assert (external->propagator.data); // REQ is defined by not allowing
+                                      // unobserving during conflict
   // we cannot modify clause during analysis
   auto clause_tmp = std::move (clause);
 
@@ -1204,8 +1210,8 @@ bool Internal::external_check_solution () {
     size_t assigned = num_assigned;
     int level_before = level;
     LOG_INTERACTION_START (cb_check_found_model);
-    bool is_consistent =
-        external->propagator->cb_check_found_model (etrail);
+    bool is_consistent = external->propagator.check_found_model (
+        external->propagator.data, etrail.data (), etrail.size ());
     LOG_INTERACTION_RETURN (cb_check_found_model, is_consistent);
     stats.ext_prop.ext_cb++;
     forced_backt_allowed = false;
@@ -1313,7 +1319,8 @@ void Internal::notify_assignments () {
   }
   if (assigned.size ()) {
     LOG_INTERACTION_FOR (notify_assignment_batch, (int) assigned.size ());
-    external->propagator->notify_assignment (assigned);
+    external->propagator.notify_assignment (
+        external->propagator.data, assigned.data (), assigned.size ());
     LOG_INTERACTION_END_FOR (notify_assignment_batch,
                              (int) assigned.size ());
   }
@@ -1338,7 +1345,8 @@ void Internal::notify_decision () {
   notify_assignments ();
   notified_level = level;
   LOG_INTERACTION_FOR (notify_new_decision_level, level);
-  external->propagator->notify_new_decision_level ();
+  external->propagator.notify_new_decision_level (
+      external->propagator.data);
   LOG_INTERACTION_END_FOR (notify_new_decision_level, level);
 }
 
@@ -1351,7 +1359,8 @@ void Internal::notify_backtrack (size_t new_level) {
     return;
   assert ((size_t) notified_level > new_level);
   LOG_INTERACTION_FOR (notify_backtrack, (int) new_level);
-  external->propagator->notify_backtrack (new_level);
+  external->propagator.notify_backtrack (external->propagator.data,
+                                         new_level);
   LOG_INTERACTION_END_FOR (notify_backtrack, (int) new_level);
   notified_level = new_level;
 }
@@ -1371,7 +1380,7 @@ int Internal::ask_decision () {
   int level_before = level;
   forced_backt_allowed = true;
   LOG_INTERACTION_START (cb_decide);
-  int elit = external->propagator->cb_decide ();
+  int elit = external->propagator.decide (external->propagator.data);
   LOG_INTERACTION_RETURN (cb_decide, elit);
   forced_backt_allowed = false;
   stats.ext_prop.ext_cb++;

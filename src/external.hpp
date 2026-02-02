@@ -117,7 +117,7 @@ struct External {
 
   // If there is an external propagator.
 
-  ExternalPropagator *propagator;
+  CExternalPropagator propagator;
   FILE *trace_api_file; // Only for user propagator interaction tracing
 
   vector<bool> is_observed; // Quick flag for each external variable
