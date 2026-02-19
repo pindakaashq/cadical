@@ -14,6 +14,10 @@
 #include <tuple>
 #include <unordered_map>
 
+#ifdef _MSC_VER
+#define __builtin_unreachable() __assume(0)
+#endif
+
 namespace CaDiCraig {
 
 // ----------------------------------------------------------------------------

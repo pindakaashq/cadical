@@ -3,6 +3,10 @@
 #include <climits>
 #include <cstring>
 
+#ifdef _MSC_VER
+#include <intrin.h>
+#endif
+
 void Reap::init () {
   for (auto &bucket : buckets)
     bucket = {0};
@@ -27,7 +31,24 @@ Reap::Reap () {
 }
 
 static inline unsigned leading_zeroes_of_unsigned (unsigned x) {
-  return x ? __builtin_clz (x) : sizeof (unsigned) * 8;
+  if (!x)
+    return sizeof (unsigned) * 8;
+#if defined(_MSC_VER)
+#if defined(_M_ARM) || defined(_M_ARM64)
+  return (unsigned) _CountLeadingZeros (x);
+#elif defined(_M_IX86) || defined(_M_X64)
+  return _lzcnt_u32(x);
+#else
+  unsigned n = 0;
+  while (!(x & 0x80000000u)) {
+    n++;
+    x <<= 1;
+  }
+  return n;
+#endif
+#else
+  return (unsigned) __builtin_clz (x);
+#endif
 }
 
 void Reap::push (unsigned e) {
