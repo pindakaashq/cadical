@@ -11,10 +11,6 @@ extern "C" {
 
 #ifdef _WIN32
 
-#ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0600
-#endif
-
 // Clang-format would reorder the includes which breaks the Windows code
 // as it expects 'windows.h' to be included first.  So disable it here.
 
