@@ -262,6 +262,12 @@ CCaDiCaL *ccadical_copy(CCaDiCaL *slv) {
   return (CCaDiCaL *)cp;
 }
 
+CCaDiCaL *ccadical_copy_with_propagator(CCaDiCaL *src, CExternalPropagator prop) {
+	auto *cp = new Wrapper();
+	((Wrapper *)src)->solver->copy_with_propagator(*cp->solver, prop);
+	return (CCaDiCaL *)cp;
+}
+
 void ccadical_connect_proof_tracer (CCaDiCaL *slv, CTracer tracer, bool antecedents, bool finalize_clauses) {
 	((Wrapper *)slv)->solver->connect_proof_tracer(tracer, antecedents, finalize_clauses);
 }

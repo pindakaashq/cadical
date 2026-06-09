@@ -585,6 +585,18 @@ public:
   //
   void copy (Solver &other) const;
 
+  // Clone this solver into the freshly-configured 'other', connect the given
+  // external propagator to 'other', and re-observe on 'other' every variable
+  // that is currently observed by 'this'.  This is used to duplicate a solver
+  // together with (a clone of) its external propagator.
+  //
+  //   require (READY)          // for 'this'
+  //   ensure (READY)           // for 'this'
+  //
+  //   other.require (CONFIGURING)
+  //
+  void copy_with_propagator (Solver &other, CExternalPropagator propagator) const;
+
   /*----------------------------------------------------------------------*/
   // Variables are usually added and initialized implicitly whenever a
   // literal is used as an argument except for the functions 'val', 'fixed',

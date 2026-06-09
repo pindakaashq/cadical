@@ -120,6 +120,7 @@ struct External {
   void add_observed_var (int elit);
   void remove_observed_var (int elit);
   void reset_observed_vars ();
+  void copy_observed_vars (External &other) const;
 
   bool observed (int elit);
   bool is_witness (int elit);
