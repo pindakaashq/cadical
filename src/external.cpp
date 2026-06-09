@@ -465,6 +465,23 @@ void External::reset_observed_vars () {
   }
 }
 
+void External::copy_observed_vars (External &other) const {
+  // 'other' must have a connected propagator (required by add_observed_var).
+  assert (other.propagator.data);
+  if (!is_observed.size ())
+    return;
+  for (auto elit : vars) {
+    int eidx = abs (elit);
+    assert (eidx <= max_var);
+    if ((size_t) eidx >= is_observed.size ())
+      break;
+    if (is_observed[eidx]) {
+      LOG ("re-observing externally watched %d on copied solver", eidx);
+      other.add_observed_var (elit);
+    }
+  }
+}
+
 bool External::observed (int elit) {
   assert (elit);
   assert (elit != INT_MIN);

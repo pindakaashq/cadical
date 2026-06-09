@@ -1809,6 +1809,13 @@ void Solver::copy (Solver &other) const {
   external->copy_flags (*other.external);
 }
 
+void Solver::copy_with_propagator (Solver &other,
+                                   CExternalPropagator prop) const {
+  copy (other);
+  other.connect_external_propagator (prop);
+  external->copy_observed_vars (*other.external);
+}
+
 /*------------------------------------------------------------------------*/
 
 void Solver::section (const char *title) {

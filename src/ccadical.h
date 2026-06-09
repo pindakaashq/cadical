@@ -105,6 +105,7 @@ void ccadical_unphase (CCaDiCaL *wrapper, int lit);
 // [PATCH] Additional C bindings for C++ Cadical
 
 CCaDiCaL *ccadical_copy(CCaDiCaL *slv);
+CCaDiCaL *ccadical_copy_with_propagator(CCaDiCaL *src, CExternalPropagator prop);
 
 struct _CTracer {
 	void* data;
