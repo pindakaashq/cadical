@@ -1,5 +1,7 @@
 #include "internal.hpp"
 
+#include <mutex>
+
 namespace CaDiCaL {
 
 /*------------------------------------------------------------------------*/
@@ -15,11 +17,11 @@ int Options::reportdefault;
 
 // The order of initializations of static objects is undefined and thus we
 // can not assume that this table is already initialized if a solver and
-// thus the constructor of 'Options' is called.  Therefore we just have to
-// reinitialize this table in every call to 'Options::Options'.  This does
-// not produce a data race even for parallel initialization since the
-// same values are written by all threads under the assumption that the
-// 'reportdefault' is set before any solver is initialized.  We do have to
+// thus the constructor of 'Options' is called.  Therefore the first call to
+// 'Options::Options' reinitializes this table, under the assumption that
+// 'reportdefault' is set before any solver is initialized.  It does so only
+// once, since a compiler may clear an entry before it writes the fields,
+// and 'has' in another thread would then read a null name.  We do have to
 // perform this static initialization though, since 'has' is static and does
 // not require that the 'Options' constructor was called.
 
@@ -120,18 +122,27 @@ Options::Options (Internal *s) : internal (s) {
       FATAL ("'%s' ordered before '" #N "' in 'options.hpp'", prev); \
     N = (int) (V); \
     assert (&val (i) == &N); \
-    /* The order of initializing static data is undefined and thus */ \
-    /* it might be the case that the 'table' is not initialized yet. */ \
-    /* Thus this construction just reinitializes the table too even */ \
-    /* though it might not be necessary. */ \
-    assert (!table[i].name || !strcmp (table[i].name, #N)); \
-    table[i] = {#N,        (int) (V),  (int) (L), (int) (H), \
-                (int) (O), (bool) (P), D}; \
     prev = #N; \
     i++; \
   } while (0);
   OPTIONS
 #undef OPTION
+
+  // The order of initializing static data is undefined and thus it might
+  // be the case that the 'table' is not initialized yet.
+  //
+  static std::once_flag table_initialized;
+  std::call_once (table_initialized, [] {
+    size_t j = 0;
+#define OPTION(N, V, L, H, O, P, R, D) \
+  do { \
+    assert (!table[j].name || !strcmp (table[j].name, #N)); \
+    table[j++] = {#N,        (int) (V),  (int) (L), (int) (H), \
+                  (int) (O), (bool) (P), D}; \
+  } while (0);
+    OPTIONS
+#undef OPTION
+  });
 
   // Check consistency in debugging mode.
   //
